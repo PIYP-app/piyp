@@ -87,11 +87,9 @@ function BottomTabNavigator () {
 function RootNavigator () {
   return (
     <Stack.Navigator>
+      <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Root" component={BottomTabNavigator} options={{ headerShown: false }} />
       <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
-      <Stack.Group screenOptions={{ presentation: 'modal' }}>
-        <Stack.Screen name="Settings" component={SettingsScreen} />
-      </Stack.Group>
     </Stack.Navigator>
   )
 }

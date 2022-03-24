@@ -6926,6 +6926,11 @@ react-native-screens@~3.10.1:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
 
+react-native-toast-message@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/react-native-toast-message/-/react-native-toast-message-2.1.2.tgz#c7fd78252d829e6a69e82320acd6fa878bb0e910"
+  integrity sha512-nLySPAhxovSisRoorpxQxUBchQJjypDit3SCaMmQMOZh3pUH0Q72XRUFingBCq19i849v+A082fdcfqGlkuiFg==
+
 react-native-web@0.17.1:
   version "0.17.1"
   resolved "https://registry.yarnpkg.com/react-native-web/-/react-native-web-0.17.1.tgz#90d473c89dd99b88bc9830b2a9fcdd2fc5f04902"
