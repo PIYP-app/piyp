@@ -1,0 +1,6 @@
+[tools]
+yq = "4.43.1"
+java = "openjdk-17" # https://developer.android.com/build/jdks?hl=fr#compileSdk
+flutter = "3.19.6-stable"
+android-sdk = "13.0"
+gradle = "7.5"

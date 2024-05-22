@@ -1,4 +1,10 @@
+import 'dart:convert';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:exif/exif.dart';
 import 'package:flutter/material.dart';
+import 'package:piyp/classes/image_data.dart';
+import 'package:webdav_client/webdav_client.dart';
 
 void main() {
   runApp(const MyApp());
@@ -55,17 +61,50 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  List<File>? files;
+  var client = newClient(
+    'WEBDAV_URL',
+    user: 'USER',
+    password: 'PASSWORD',
+    debug: false,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    retrieveFileList();
+  }
+
+  retrieveFileList() async {
+    // Set the public request headers
+    client.setHeaders({'accept-charset': 'utf-8'});
+
+    // Set the connection server timeout time in milliseconds.
+    client.setConnectTimeout(8000);
+
+    // Set send data timeout time in milliseconds.
+    client.setSendTimeout(8000);
+
+    // Set transfer data time in milliseconds.
+    client.setReceiveTimeout(8000);
+
+    // try {
+    //   await client.ping();
+    // } catch (e) {
+    //   print('$e');
+    // }
+
+    var list = await client.readDir('/Photos');
+
+    setState(() {
+      files = list;
+      files!.sort((a, b) => b.mTime!.compareTo(a.mTime!));
+    });
+    // print(list.map((e) => e.name).toList());
+  }
 
   void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+    retrieveFileList();
   }
 
   @override
@@ -87,34 +126,65 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
+          // Center is a layout widget. It takes a single child and positions it
+          // in the middle of the parent.
+          child: files != null
+              ? GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                  ),
+                  itemCount: files!.length,
+                  itemBuilder: (context, index) {
+                    // client.read(files![index].path!).then((value) =>
+                    //     readExifFromBytes(value).then((value) {
+                    //       print(value);
+                    //       final test = ImageExif(
+                    //         make: value['Image Make']!.printable,
+                    //         model: value['Image Model']!.printable,
+                    //         orientation: value['Image Orientation']!.printable,
+                    //         xResolution: int.parse(
+                    //             value['Image XResolution']!.printable),
+                    //         yResolution: int.parse(
+                    //             value['Image YResolution']!.printable),
+                    //         resolutionUnit:
+                    //             value['Image ResolutionUnit']!.printable,
+                    //         software: value['Image Software']!.printable,
+                    //         dateTime: value['Image DateTime']!.printable,
+                    //         hostComputer:
+                    //             value['Image Host Computer']?.printable,
+                    //         tileWidth:
+                    //             int.parse(value['Image TileWidth']!.printable),
+                    //         tileLength:
+                    //             int.parse(value['Image TileLength']!.printable),
+                    //         exifOffset:
+                    //             int.parse(value['Image ExifOffset']!.printable),
+                    //         GPS: ExifGPS(GPSLatitudeRef: value['GPS GPSLatitudeRef']!.printable, GPSLatitude: GPSLatitude, GPSLongitudeRef: GPSLongitudeRef, GPSLongitude: GPSLongitude, GPSAltitudeRef: GPSAltitudeRef, GPSAltitude: GPSAltitude, GPSTimeStamp: GPSTimeStamp, GPSSpeedRef: GPSSpeedRef, GPSSpeed: GPSSpeed, GPSImgDirectionRef: GPSImgDirectionRef, GPSImgDirection: GPSImgDirection, GPSDestBearingRef: GPSDestBearingRef, GPSDestBearing: GPSDestBearing, GPSDate: GPSDate, Tag0x001F: Tag0x001F),
+                    //         // EXIF: value['EXIF']!.printable,
+                    //       );
+                    //       print(value['GPS GPSLatitudeRef']!.printable);
+                    //     }));
+                    return Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: !files![index].mimeType!.contains('video')
+                            ? CachedNetworkImage(
+                                width: MediaQuery.of(context).size.width / 3,
+                                height: MediaQuery.of(context).size.width / 3,
+                                fit: BoxFit.cover,
+                                imageUrl: 'WEBDAV_URL${files![index].path!}',
+                                httpHeaders: {
+                                  'Authorization':
+                                      'Basic ${base64.encode(utf8.encode('USER:PASSWORD'))}'
+                                },
+                                progressIndicatorBuilder:
+                                    (context, url, downloadProgress) =>
+                                        CircularProgressIndicator(
+                                            value: downloadProgress.progress),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.error),
+                              )
+                            : const SizedBox());
+                  })
+              : const SizedBox()),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
