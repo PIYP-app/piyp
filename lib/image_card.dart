@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:piyp/thumbnail.dart';
 import 'package:webdav_client/webdav_client.dart';
 
@@ -49,12 +50,19 @@ class _ImageCardState extends State<ImageCard> {
       );
     }
 
-    return Container(
-        decoration: BoxDecoration(
-      image: DecorationImage(
-        image: Image.memory(compressedImage!).image,
-        fit: BoxFit.cover,
-      ),
-    ));
+    return InkWell(
+        onTap: () {
+          context
+              .push(Uri(path: '/photos/${widget.file.eTag}', queryParameters: {
+            'name': widget.file.name ?? '',
+          }).toString());
+        }, // Handle your callback
+        child: Container(
+            decoration: BoxDecoration(
+          image: DecorationImage(
+            image: Image.memory(compressedImage!).image,
+            fit: BoxFit.cover,
+          ),
+        )));
   }
 }
