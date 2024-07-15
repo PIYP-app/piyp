@@ -1,124 +1,126 @@
+import 'package:exif/exif.dart';
+
 class ExifGPS {
-  String GPSLatitudeRef;
-  List<double> GPSLatitude;
-  String GPSLongitudeRef;
-  List<double> GPSLongitude;
-  int GPSAltitudeRef;
-  String GPSAltitude;
-  List<double> GPSTimeStamp;
-  String GPSSpeedRef;
-  int GPSSpeed;
-  String GPSImgDirectionRef;
-  String GPSImgDirection;
-  String GPSDestBearingRef;
-  String GPSDestBearing;
-  DateTime GPSDate;
-  int Tag0x001F;
+  String? GPSLatitudeRef;
+  List<Ratio>? GPSLatitude;
+  String? GPSLongitudeRef;
+  List<Ratio>? GPSLongitude;
+  int? GPSAltitudeRef;
+  String? GPSAltitude;
+  List<Ratio>? GPSTimeStamp;
+  String? GPSSpeedRef;
+  Ratio? GPSSpeed;
+  String? GPSImgDirectionRef;
+  String? GPSImgDirection;
+  String? GPSDestBearingRef;
+  String? GPSDestBearing;
+  DateTime? GPSDate;
+  int? Tag0x001F;
 
   ExifGPS({
-    required this.GPSLatitudeRef,
-    required this.GPSLatitude,
-    required this.GPSLongitudeRef,
-    required this.GPSLongitude,
-    required this.GPSAltitudeRef,
-    required this.GPSAltitude,
-    required this.GPSTimeStamp,
-    required this.GPSSpeedRef,
-    required this.GPSSpeed,
-    required this.GPSImgDirectionRef,
-    required this.GPSImgDirection,
-    required this.GPSDestBearingRef,
-    required this.GPSDestBearing,
-    required this.GPSDate,
-    required this.Tag0x001F,
+    this.GPSLatitudeRef,
+    this.GPSLatitude,
+    this.GPSLongitudeRef,
+    this.GPSLongitude,
+    this.GPSAltitudeRef,
+    this.GPSAltitude,
+    this.GPSTimeStamp,
+    this.GPSSpeedRef,
+    this.GPSSpeed,
+    this.GPSImgDirectionRef,
+    this.GPSImgDirection,
+    this.GPSDestBearingRef,
+    this.GPSDestBearing,
+    this.GPSDate,
+    this.Tag0x001F,
   });
 }
 
 class ExifPhoto {
-  String exposureTime;
-  String fNumber;
-  String exposureProgram;
-  int isoSpeedRatings;
-  String exifVersion;
-  String dateTimeOriginal;
-  String dateTimeDigitized;
-  String offsetTime;
-  String offsetTimeOriginal;
-  String offsetTimeDigitized;
-  String shutterSpeedValue;
-  String apertureValue;
-  String brightnessValue;
-  String exposureBiasValue;
-  String meteringMode;
-  String flash;
-  String focalLength;
-  List<int> subjectArea;
-  List<int> makerNote;
-  int subSecTimeOriginal;
-  int subSecTimeDigitized;
-  String colorSpace;
-  int exifImageWidth;
-  int exifImageLength;
-  String sensingMethod;
-  String sceneType;
-  String exposureMode;
-  String whiteBalance;
-  int focalLengthIn35mmFilm;
-  List<String> lensSpecification;
-  String lensMake;
-  String lensModel;
-  int tag0xA460;
+  String? exposureTime;
+  String? fNumber;
+  String? exposureProgram;
+  int? isoSpeedRatings;
+  String? exifVersion;
+  String? dateTimeOriginal;
+  String? dateTimeDigitized;
+  String? offsetTime;
+  String? offsetTimeOriginal;
+  String? offsetTimeDigitized;
+  String? shutterSpeedValue;
+  String? apertureValue;
+  String? brightnessValue;
+  String? exposureBiasValue;
+  String? meteringMode;
+  String? flash;
+  String? focalLength;
+  List<int>? subjectArea;
+  List<int>? makerNote;
+  int? subSecTimeOriginal;
+  int? subSecTimeDigitized;
+  String? colorSpace;
+  int? exifImageWidth;
+  int? exifImageLength;
+  String? sensingMethod;
+  String? sceneType;
+  String? exposureMode;
+  String? whiteBalance;
+  int? focalLengthIn35mmFilm;
+  List<Ratio>? lensSpecification;
+  String? lensMake;
+  String? lensModel;
+  int? tag0xA460;
 
   ExifPhoto({
-    required this.exposureTime,
-    required this.fNumber,
-    required this.exposureProgram,
-    required this.isoSpeedRatings,
-    required this.exifVersion,
-    required this.dateTimeOriginal,
-    required this.dateTimeDigitized,
-    required this.offsetTime,
-    required this.offsetTimeOriginal,
-    required this.offsetTimeDigitized,
-    required this.shutterSpeedValue,
-    required this.apertureValue,
-    required this.brightnessValue,
-    required this.exposureBiasValue,
-    required this.meteringMode,
-    required this.flash,
-    required this.focalLength,
-    required this.subjectArea,
-    required this.makerNote,
-    required this.subSecTimeOriginal,
-    required this.subSecTimeDigitized,
-    required this.colorSpace,
-    required this.exifImageWidth,
-    required this.exifImageLength,
-    required this.sensingMethod,
-    required this.sceneType,
-    required this.exposureMode,
-    required this.whiteBalance,
-    required this.focalLengthIn35mmFilm,
-    required this.lensSpecification,
-    required this.lensMake,
-    required this.lensModel,
-    required this.tag0xA460,
+    this.exposureTime,
+    this.fNumber,
+    this.exposureProgram,
+    this.isoSpeedRatings,
+    this.exifVersion,
+    this.dateTimeOriginal,
+    this.dateTimeDigitized,
+    this.offsetTime,
+    this.offsetTimeOriginal,
+    this.offsetTimeDigitized,
+    this.shutterSpeedValue,
+    this.apertureValue,
+    this.brightnessValue,
+    this.exposureBiasValue,
+    this.meteringMode,
+    this.flash,
+    this.focalLength,
+    this.subjectArea,
+    this.makerNote,
+    this.subSecTimeOriginal,
+    this.subSecTimeDigitized,
+    this.colorSpace,
+    this.exifImageWidth,
+    this.exifImageLength,
+    this.sensingMethod,
+    this.sceneType,
+    this.exposureMode,
+    this.whiteBalance,
+    this.focalLengthIn35mmFilm,
+    this.lensSpecification,
+    this.lensMake,
+    this.lensModel,
+    this.tag0xA460,
   });
 }
 
 class ImageExif {
-  String make;
-  String model;
-  String orientation;
-  int xResolution;
-  int yResolution;
-  String resolutionUnit;
-  String software;
-  String dateTime;
+  String? make;
+  String? model;
+  String? orientation;
+  int? xResolution;
+  int? yResolution;
+  String? resolutionUnit;
+  String? software;
+  String? dateTime;
   String? hostComputer;
-  int tileWidth;
-  int tileLength;
-  int exifOffset;
+  int? tileWidth;
+  int? tileLength;
+  int? exifOffset;
   ExifGPS? GPS;
   ExifPhoto? EXIF;
   // Map<String, dynamic> MakerNote = {
@@ -136,18 +138,18 @@ class ImageExif {
   // };
 
   ImageExif({
-    required this.make,
-    required this.model,
-    required this.orientation,
-    required this.xResolution,
-    required this.yResolution,
-    required this.resolutionUnit,
-    required this.software,
-    required this.dateTime,
+    this.make,
+    this.model,
+    this.orientation,
+    this.xResolution,
+    this.yResolution,
+    this.resolutionUnit,
+    this.software,
+    this.dateTime,
     this.hostComputer,
-    required this.tileWidth,
-    required this.tileLength,
-    required this.exifOffset,
+    this.tileWidth,
+    this.tileLength,
+    this.exifOffset,
     this.GPS,
     this.EXIF,
     // required this.MakerNote,

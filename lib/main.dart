@@ -1,13 +1,25 @@
-import 'dart:convert';
+import 'dart:typed_data';
 
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:exif/exif.dart';
 import 'package:flutter/material.dart';
-import 'package:piyp/classes/image_data.dart';
+import 'package:piyp/image_card.dart';
+import 'package:piyp/thumbnail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webdav_client/webdav_client.dart';
+
+setSharedPreferences() async {
+  try {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString('webdav_uri', '');
+    await preferences.setString('webdav_user', '');
+    await preferences.setString('webdav_password', '');
+  } catch (error) {
+    print('Error setting shared preferences: $error');
+  }
+}
 
 void main() {
   runApp(const MyApp());
+  Thumbnail.initThumbnailFolder();
 }
 
 class MyApp extends StatelessWidget {
@@ -19,21 +31,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
@@ -45,15 +42,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -62,45 +50,41 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<File>? files;
-  var client = newClient(
-    'WEBDAV_URL',
-    user: 'USER',
-    password: 'PASSWORD',
-    debug: false,
-  );
+  Client? client;
 
   @override
   void initState() {
     super.initState();
-    retrieveFileList();
+    initWebdavClient();
+  }
+
+  initWebdavClient() async {
+    await setSharedPreferences();
+    final preferences = await SharedPreferences.getInstance();
+
+    client = Client(
+      uri: preferences.getString('webdav_uri')!,
+      c: WdDio(),
+      auth: BasicAuth(
+          user: preferences.getString('webdav_user')!,
+          pwd: preferences.getString('webdav_password')!),
+    );
+
+    await retrieveFileList();
   }
 
   retrieveFileList() async {
-    // Set the public request headers
-    client.setHeaders({'accept-charset': 'utf-8'});
+    client!.setHeaders({'Accept-Charset': 'utf-8'});
+    client!.setConnectTimeout(8000);
+    client!.setSendTimeout(8000);
+    client!.setReceiveTimeout(8000);
 
-    // Set the connection server timeout time in milliseconds.
-    client.setConnectTimeout(8000);
-
-    // Set send data timeout time in milliseconds.
-    client.setSendTimeout(8000);
-
-    // Set transfer data time in milliseconds.
-    client.setReceiveTimeout(8000);
-
-    // try {
-    //   await client.ping();
-    // } catch (e) {
-    //   print('$e');
-    // }
-
-    var list = await client.readDir('/Photos');
+    var list = await client!.readDir('/Photos');
 
     setState(() {
       files = list;
       files!.sort((a, b) => b.mTime!.compareTo(a.mTime!));
     });
-    // print(list.map((e) => e.name).toList());
   }
 
   void _incrementCounter() {
@@ -109,87 +93,156 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-          // Center is a layout widget. It takes a single child and positions it
-          // in the middle of the parent.
           child: files != null
               ? GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                  ),
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 2,
+                      mainAxisSpacing: 2),
+                  padding: const EdgeInsets.all(2),
                   itemCount: files!.length,
                   itemBuilder: (context, index) {
                     // client.read(files![index].path!).then((value) =>
                     //     readExifFromBytes(value).then((value) {
-                    //       print(value);
                     //       final test = ImageExif(
-                    //         make: value['Image Make']!.printable,
-                    //         model: value['Image Model']!.printable,
-                    //         orientation: value['Image Orientation']!.printable,
+                    //         make: value['Image Make']?.printable ?? '',
+                    //         model: value['Image Model']?.printable,
+                    //         orientation: value['Image Orientation']?.printable,
                     //         xResolution: int.parse(
-                    //             value['Image XResolution']!.printable),
+                    //             value['Image XResolution']?.printable ?? '0'),
                     //         yResolution: int.parse(
-                    //             value['Image YResolution']!.printable),
+                    //             value['Image YResolution']?.printable ?? '0'),
                     //         resolutionUnit:
-                    //             value['Image ResolutionUnit']!.printable,
-                    //         software: value['Image Software']!.printable,
-                    //         dateTime: value['Image DateTime']!.printable,
+                    //             value['Image ResolutionUnit']?.printable,
+                    //         software: value['Image Software']?.printable,
+                    //         dateTime: value['Image DateTime']?.printable,
                     //         hostComputer:
-                    //             value['Image Host Computer']?.printable,
+                    //             value['Image HostComputer']?.printable,
                     //         tileWidth:
-                    //             int.parse(value['Image TileWidth']!.printable),
+                    //             0, // int.parse(value['Image TileWidth']?.printable),
                     //         tileLength:
-                    //             int.parse(value['Image TileLength']!.printable),
-                    //         exifOffset:
-                    //             int.parse(value['Image ExifOffset']!.printable),
-                    //         GPS: ExifGPS(GPSLatitudeRef: value['GPS GPSLatitudeRef']!.printable, GPSLatitude: GPSLatitude, GPSLongitudeRef: GPSLongitudeRef, GPSLongitude: GPSLongitude, GPSAltitudeRef: GPSAltitudeRef, GPSAltitude: GPSAltitude, GPSTimeStamp: GPSTimeStamp, GPSSpeedRef: GPSSpeedRef, GPSSpeed: GPSSpeed, GPSImgDirectionRef: GPSImgDirectionRef, GPSImgDirection: GPSImgDirection, GPSDestBearingRef: GPSDestBearingRef, GPSDestBearing: GPSDestBearing, GPSDate: GPSDate, Tag0x001F: Tag0x001F),
-                    //         // EXIF: value['EXIF']!.printable,
+                    //             0, // int.parse(value['Image TileLength']?.printable),
+                    //         exifOffset: int.parse(
+                    //             value['Image ExifOffset']?.printable ?? '0'),
+                    //         GPS: ExifGPS(
+                    //             GPSLatitudeRef:
+                    //                 value['GPS GPSLatitudeRef']?.printable,
+                    //             GPSLatitude: value['GPS GPSLatitude']?.values.toList()
+                    //                 as List<Ratio>?,
+                    //             GPSLongitudeRef:
+                    //                 value['GPS GPSLongitudeRef']?.printable,
+                    //             GPSLongitude: value['GPS GPSLongitude']?.values.toList()
+                    //                 as List<Ratio>?,
+                    //             GPSAltitudeRef: int.parse(
+                    //                 value['GPS GPSAltitudeRef']?.printable ??
+                    //                     '0'),
+                    //             GPSAltitude:
+                    //                 value['GPS GPSAltitude']?.printable,
+                    //             GPSTimeStamp: value['GPS GPSTimeStamp']
+                    //                 ?.values
+                    //                 .toList() as List<Ratio>?,
+                    //             GPSSpeedRef:
+                    //                 value['GPS GPSSpeedRef']?.printable,
+                    //             GPSSpeed: value['GPS GPSSpeed']?.values.toList()[0]
+                    //                 as Ratio?,
+                    //             GPSImgDirectionRef:
+                    //                 value['GPS GPSImgDirectionRef']?.printable,
+                    //             GPSImgDirection: value['GPS GPSImgDirection']?.printable,
+                    //             GPSDestBearingRef: value['GPS GPSDestBearingRef']?.printable,
+                    //             GPSDestBearing: value['GPS GPSDestBearing']?.printable,
+                    //             GPSDate: value['GPS GPSDate'] != null ? DateTime.parse(value['GPS GPSDate']!.printable.replaceAll(':', '-')) : null,
+                    //             Tag0x001F: int.parse(value['Tag 0x001F']?.printable ?? '0')),
+                    //         EXIF: ExifPhoto(
+                    //           exposureTime:
+                    //               value['EXIF ExposureTime']?.printable,
+                    //           fNumber: value['EXIF FNumber']?.printable,
+                    //           exposureProgram:
+                    //               value['EXIF ExposureProgram']?.printable,
+                    //           isoSpeedRatings: int.parse(
+                    //               value['EXIF ISOSpeedRatings']?.printable ??
+                    //                   '0'),
+                    //           exifVersion: value['EXIF ExifVersion']?.printable,
+                    //           dateTimeOriginal:
+                    //               value['EXIF DateTimeOriginal']?.printable,
+                    //           dateTimeDigitized:
+                    //               value['EXIF DateTimeDigitized']?.printable,
+                    //           offsetTime: value['EXIF OffsetTime']?.printable,
+                    //           offsetTimeOriginal:
+                    //               value['EXIF OffsetTimeOriginal']?.printable,
+                    //           offsetTimeDigitized:
+                    //               value['EXIF OffsetTimeDigitized']?.printable,
+                    //           shutterSpeedValue:
+                    //               value['EXIF ShutterSpeedValue']?.printable,
+                    //           apertureValue:
+                    //               value['EXIF ApertureValue']?.printable,
+                    //           brightnessValue:
+                    //               value['EXIF BrightnessValue']?.printable,
+                    //           exposureBiasValue:
+                    //               value['EXIF ExposureBiasValue']?.printable,
+                    //           meteringMode:
+                    //               value['EXIF MeteringMode']?.printable,
+                    //           flash: value['EXIF Flash']?.printable,
+                    //           focalLength: value['EXIF FocalLength']?.printable,
+                    //           subjectArea: value['EXIF SubjectArea']
+                    //               ?.values
+                    //               .toList() as List<int>?,
+                    //           makerNote: value['EXIF MakerNote']
+                    //               ?.values
+                    //               .toList() as List<int>?,
+                    //           subSecTimeOriginal: int.parse(
+                    //               value['EXIF SubSecTimeOriginal']?.printable ??
+                    //                   '0'),
+                    //           subSecTimeDigitized: int.parse(
+                    //               value['EXIF SubSecTimeDigitized']
+                    //                       ?.printable ??
+                    //                   '0'),
+                    //           colorSpace: value['EXIF ColorSpace']?.printable,
+                    //           exifImageWidth: int.parse(
+                    //               value['EXIF ExifImageWidth']?.printable ??
+                    //                   '0'),
+                    //           exifImageLength: int.parse(
+                    //               value['EXIF ExifImageLength']?.printable ??
+                    //                   '0'),
+                    //           sensingMethod:
+                    //               value['EXIF SensingMethod']?.printable,
+                    //           sceneType: value['EXIF SceneType']?.printable,
+                    //           exposureMode:
+                    //               value['EXIF ExposureMode']?.printable,
+                    //           whiteBalance:
+                    //               value['EXIF WhiteBalance']?.printable,
+                    //           focalLengthIn35mmFilm: int.parse(
+                    //               value['EXIF FocalLengthIn35mmFilm']
+                    //                       ?.printable ??
+                    //                   '0'),
+                    //           lensSpecification: value['EXIF LensSpecification']
+                    //               ?.values
+                    //               .toList() as List<Ratio>?,
+                    //           lensMake: value['EXIF LensMake']?.printable,
+                    //           lensModel: value['EXIF LensModel']?.printable,
+                    //           tag0xA460: int.parse(
+                    //               value['Tag 0xA460']?.printable ?? '0'),
+                    //         ),
                     //       );
-                    //       print(value['GPS GPSLatitudeRef']!.printable);
                     //     }));
                     return Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: !files![index].mimeType!.contains('video')
-                            ? CachedNetworkImage(
-                                width: MediaQuery.of(context).size.width / 3,
-                                height: MediaQuery.of(context).size.width / 3,
-                                fit: BoxFit.cover,
-                                imageUrl: 'WEBDAV_URL${files![index].path!}',
-                                httpHeaders: {
-                                  'Authorization':
-                                      'Basic ${base64.encode(utf8.encode('USER:PASSWORD'))}'
-                                },
-                                progressIndicatorBuilder:
-                                    (context, url, downloadProgress) =>
-                                        CircularProgressIndicator(
-                                            value: downloadProgress.progress),
-                                errorWidget: (context, url, error) =>
-                                    const Icon(Icons.error),
-                              )
-                            : const SizedBox());
+                        padding: const EdgeInsets.all(0),
+                        child: ImageCard(
+                          file: files![index],
+                          webdavClient: client!,
+                        ));
                   })
               : const SizedBox()),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
