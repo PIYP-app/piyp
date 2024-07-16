@@ -44,6 +44,38 @@ dependencies:
   video_thumbnail: ^0.5.3
   shared_preferences: ^2.2.3
   go_router: ^14.2.1
+  media_kit:
+    git:
+      url: https://github.com/media-kit/media-kit.git
+      ref: main
+      path: ./media_kit
+  media_kit_video:
+    git:
+      url: https://github.com/media-kit/media-kit.git
+      ref: main
+      path: ./media_kit_video
+  media_kit_libs_video:
+    git:
+      url: https://github.com/media-kit/media-kit.git
+      ref: main
+      path: ./libs/universal/media_kit_libs_video
+
+dependency_overrides:
+  media_kit:
+    git:
+      url: https://github.com/media-kit/media-kit.git
+      ref: main
+      path: ./media_kit
+  media_kit_video:
+    git:
+      url: https://github.com/media-kit/media-kit.git
+      ref: main
+      path: ./media_kit_video
+  media_kit_libs_video:
+    git:
+      url: https://github.com/media-kit/media-kit.git
+      ref: main
+      path: ./libs/universal/media_kit_libs_video
 
 dev_dependencies:
   flutter_test:

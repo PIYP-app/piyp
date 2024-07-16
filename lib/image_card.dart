@@ -50,10 +50,13 @@ class _ImageCardState extends State<ImageCard> {
       );
     }
 
+    final mediaType =
+        widget.file.mimeType!.contains('video') ? 'videos' : 'photos';
+
     return InkWell(
         onTap: () {
-          context
-              .push(Uri(path: '/photos/${widget.file.eTag}', queryParameters: {
+          context.push(
+              Uri(path: '/$mediaType/${widget.file.eTag}', queryParameters: {
             'name': widget.file.name ?? '',
           }).toString());
         }, // Handle your callback

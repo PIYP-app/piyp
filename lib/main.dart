@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:media_kit/media_kit.dart';
 import 'package:piyp/thumbnail.dart';
 import 'package:piyp/router.dart';
 
 void main() {
   runApp(const MyApp());
   Thumbnail.initThumbnailFolder();
+  MediaKit.ensureInitialized();
 }
 
 final ThemeData darkTheme = ThemeData(
