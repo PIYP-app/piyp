@@ -42,7 +42,7 @@ class _PhotoPageState extends State<PhotoPage> {
         maxScale: 20,
         child: CachedNetworkImage(
           imageUrl:
-              '${preferences.getString('webdav_uri')}/Photos/${widget.name}',
+              '${preferences.getString('webdav_uri')}${preferences.getString('webdav_folder_path') ?? ''}/${widget.name}',
           httpHeaders: {
             'Authorization': webdav.BasicAuth(
                     user: preferences.getString('webdav_user') ?? '',
@@ -57,7 +57,10 @@ class _PhotoPageState extends State<PhotoPage> {
 
   _renderLoadingState(double? progress) {
     return compressedImage != null
-        ? Image.memory(compressedImage!)
+        ? Image.memory(
+            compressedImage!,
+            fit: BoxFit.contain,
+          )
         : CircularProgressIndicator(value: progress);
   }
 

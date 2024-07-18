@@ -32,8 +32,8 @@ class Thumbnail {
       Uint8List fileByte, String eTag) async {
     final fileBytes = await FlutterImageCompress.compressWithList(
       fileByte,
-      minWidth: 500,
-      minHeight: 500,
+      minWidth: 300,
+      minHeight: 300,
       quality: 1,
     );
 

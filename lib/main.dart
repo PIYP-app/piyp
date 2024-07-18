@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:piyp/thumbnail.dart';
@@ -34,7 +35,10 @@ final ThemeData darkTheme = ThemeData(
   ),
   textTheme: const TextTheme(
     bodyLarge: TextStyle(color: Colors.white, fontSize: 16),
+    bodySmall: TextStyle(color: Colors.white, fontSize: 16),
     bodyMedium: TextStyle(color: Colors.white70, fontSize: 14),
+    titleMedium: TextStyle(color: Colors.white70, fontSize: 14),
+    titleSmall: TextStyle(color: Colors.white70, fontSize: 14),
     titleLarge: TextStyle(
         color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
   ),
@@ -61,6 +65,10 @@ final ThemeData darkTheme = ThemeData(
       primary: Colors.black,
       secondary: Colors.blue,
       brightness: Brightness.dark),
+  cupertinoOverrideTheme: const NoDefaultCupertinoThemeData(
+      brightness: Brightness.dark,
+      textTheme: CupertinoTextThemeData(
+          textStyle: TextStyle(color: Colors.white, fontSize: 16))),
 );
 
 final ThemeData lightTheme = ThemeData(
@@ -121,8 +129,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Photos in your pocket (PIYP)',
-      theme: lightTheme,
-      darkTheme: darkTheme,
+      // theme: lightTheme,
+      // darkTheme: darkTheme,
       themeMode: ThemeMode.system,
       routerConfig: appRouter,
     );

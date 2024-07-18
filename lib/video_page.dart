@@ -58,7 +58,8 @@ class _VideoPageState extends State<VideoPage> {
     });
 
     await player.open(
-        Media('${preferences.getString('webdav_uri')}/Photos/${widget.name}',
+        Media(
+            '${preferences.getString('webdav_uri')}${preferences.getString('webdav_folder_path') ?? ''}/${widget.name}',
             httpHeaders: {
               'Authorization': webdav.BasicAuth(
                       user: preferences.getString('webdav_user') ?? '',
