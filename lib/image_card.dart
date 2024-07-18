@@ -3,13 +3,13 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:piyp/thumbnail.dart';
+import 'package:piyp/webdav_client.dart';
 import 'package:webdav_client/webdav_client.dart';
 
 class ImageCard extends StatefulWidget {
-  ImageCard({super.key, required this.file, required this.webdavClient});
+  const ImageCard({super.key, required this.file});
 
-  File file;
-  Client webdavClient;
+  final File file;
 
   @override
   State<ImageCard> createState() => _ImageCardState();
@@ -17,6 +17,7 @@ class ImageCard extends StatefulWidget {
 
 class _ImageCardState extends State<ImageCard> {
   Uint8List? compressedImage;
+  WebdavClient webdavClient = WebdavClient();
 
   @override
   void initState() {
@@ -31,7 +32,7 @@ class _ImageCardState extends State<ImageCard> {
         compressedImage = await Thumbnail.generateVideoThumbnail(
             widget.file.path!, widget.file.eTag!);
       } else {
-        List<int> fileByte = await widget.webdavClient.read(widget.file.path!);
+        List<int> fileByte = await webdavClient.client.read(widget.file.path!);
         compressedImage = await Thumbnail.generatePhotoThumbnail(
             Uint8List.fromList(fileByte), widget.file.eTag!);
       }
@@ -45,9 +46,7 @@ class _ImageCardState extends State<ImageCard> {
   @override
   Widget build(BuildContext context) {
     if (compressedImage == null) {
-      return Container(
-        child: Text(widget.file.name ?? ''),
-      );
+      return Text(widget.file.name ?? '');
     }
 
     final mediaType =

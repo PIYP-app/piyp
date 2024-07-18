@@ -7,10 +7,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 
 class PhotoPage extends StatefulWidget {
-  PhotoPage({super.key, required this.eTag, required this.name});
+  const PhotoPage({super.key, required this.eTag, required this.name});
 
-  String? eTag;
-  String? name;
+  final String? eTag;
+  final String? name;
 
   @override
   State<PhotoPage> createState() => _PhotoPageState();
