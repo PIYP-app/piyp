@@ -76,9 +76,9 @@ class _HomePageState extends State<HomePage> {
     final preferences = await SharedPreferences.getInstance();
 
     client.client.setHeaders({'Accept-Charset': 'utf-8'});
-    client.client.setConnectTimeout(8000);
-    client.client.setSendTimeout(8000);
-    client.client.setReceiveTimeout(8000);
+    client.client.setConnectTimeout(15000);
+    client.client.setSendTimeout(15000);
+    client.client.setReceiveTimeout(15000);
 
     try {
       var list = await client.client
