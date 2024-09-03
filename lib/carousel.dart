@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:piyp/carousel_bottom_bar.dart';
 import 'package:piyp/fading_app_bar.dart';
 import 'package:piyp/photo_page.dart';
 import 'package:piyp/video_page.dart';
@@ -17,6 +18,7 @@ class _CarouselState extends State<Carousel> {
   late PageController _pageController;
   WebdavClient client = WebdavClient();
   bool visibility = true;
+  DateTime? fileTime;
 
   @override
   void initState() {
@@ -25,19 +27,32 @@ class _CarouselState extends State<Carousel> {
         viewportFraction: 1,
         initialPage:
             client.files.indexWhere((element) => element.eTag == widget.eTag));
+    fileTime =
+        client.files.firstWhere((element) => element.eTag == widget.eTag).mTime;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        extendBodyBehindAppBar: true,
+        extendBody: true,
+        backgroundColor: visibility
+            ? Theme.of(context).scaffoldBackgroundColor
+            : Colors.black,
         appBar: FadingAppBar(
           visibility: visibility,
+          fileTime: fileTime,
         ),
+        bottomNavigationBar: const CarouselBottomBar(),
         body: PageView.builder(
             controller: _pageController,
             itemCount: client.files.length,
             pageSnapping: true,
+            onPageChanged: (pagePosition) {
+              setState(() {
+                fileTime = client.files[pagePosition].mTime;
+              });
+            },
             itemBuilder: (context, pagePosition) {
               return GestureDetector(
                   onTap: () {
@@ -50,7 +65,6 @@ class _CarouselState extends State<Carousel> {
                     });
                   },
                   child: Container(
-                      margin: const EdgeInsets.all(10),
                       child:
                           client.files[pagePosition].mimeType!.contains('video')
                               ? VideoPage(

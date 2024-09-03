@@ -35,14 +35,9 @@ final appRouter = GoRouter(
     GoRoute(
         name: 'Photo',
         path: '/photos/:eTag',
-        builder: (context, state) => Scaffold(
-            appBar: AppBar(
-              automaticallyImplyLeading: false,
-              toolbarHeight: 20,
-            ),
-            body: Carousel(
+        builder: (context, state) => Carousel(
               eTag: state.pathParameters['eTag'],
-            ))),
+            )),
     GoRoute(
         name: 'Video',
         path: '/videos/:eTag',

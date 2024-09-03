@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
 class FadingAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const FadingAppBar({super.key, required this.visibility});
+  const FadingAppBar(
+      {super.key, required this.visibility, required this.fileTime});
 
   final bool visibility;
+  final DateTime? fileTime;
 
   @override
   State<FadingAppBar> createState() => _FadingAppBarState();
@@ -35,6 +38,16 @@ class _FadingAppBarState extends State<FadingAppBar>
     super.dispose();
   }
 
+  computeDay(DateTime? dateTime) {
+    final DateTime definedDateTime = dateTime ?? DateTime.now();
+
+    if (DateFormat.MMMd().format(definedDateTime) ==
+        DateFormat.MMMd().format(DateTime.now())) {
+      return 'Today';
+    }
+    return DateFormat.MMMMd().format(definedDateTime);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.visibility) {
@@ -43,9 +56,20 @@ class _FadingAppBarState extends State<FadingAppBar>
       _controller.reverse();
     }
 
-    return FadeTransition(
-      opacity: _animation,
-      child: const Padding(padding: EdgeInsets.all(8), child: FlutterLogo()),
+    return Positioned(
+      height: kToolbarHeight,
+      width: MediaQuery.of(context).size.width,
+      top: MediaQuery.of(context).viewPadding.top,
+      child: FadeTransition(
+        opacity: _animation,
+        child: AppBar(
+          shape: const Border(bottom: BorderSide(color: Colors.grey, width: 1)),
+          elevation: 0,
+          backgroundColor: const Color.fromARGB(100, 246, 246, 246),
+          title:
+              Text(widget.fileTime != null ? computeDay(widget.fileTime) : ''),
+        ),
+      ),
     );
   }
 }
