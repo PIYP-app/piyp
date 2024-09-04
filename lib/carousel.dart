@@ -18,17 +18,15 @@ class _CarouselState extends State<Carousel> {
   late PageController _pageController;
   WebdavClient client = WebdavClient();
   bool visibility = true;
-  DateTime? fileTime;
+  int indexFile = 0;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(
-        viewportFraction: 1,
-        initialPage:
-            client.files.indexWhere((element) => element.eTag == widget.eTag));
-    fileTime =
-        client.files.firstWhere((element) => element.eTag == widget.eTag).mTime;
+    indexFile =
+        client.files.indexWhere((element) => element.eTag == widget.eTag);
+    _pageController =
+        PageController(viewportFraction: 1, initialPage: indexFile);
   }
 
   @override
@@ -36,21 +34,21 @@ class _CarouselState extends State<Carousel> {
     return Scaffold(
         extendBodyBehindAppBar: true,
         extendBody: true,
-        backgroundColor: visibility
-            ? Theme.of(context).scaffoldBackgroundColor
-            : Colors.black,
         appBar: FadingAppBar(
           visibility: visibility,
-          fileTime: fileTime,
+          fileTime: client.files[indexFile].mTime,
         ),
-        bottomNavigationBar: const CarouselBottomBar(),
+        bottomNavigationBar: CarouselBottomBar(
+          visibility: visibility,
+          fileName: client.files[indexFile].name,
+        ),
         body: PageView.builder(
             controller: _pageController,
             itemCount: client.files.length,
             pageSnapping: true,
             onPageChanged: (pagePosition) {
               setState(() {
-                fileTime = client.files[pagePosition].mTime;
+                indexFile = pagePosition;
               });
             },
             itemBuilder: (context, pagePosition) {
@@ -64,7 +62,11 @@ class _CarouselState extends State<Carousel> {
                       visibility = !visibility;
                     });
                   },
-                  child: Container(
+                  child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      color: visibility
+                          ? Theme.of(context).scaffoldBackgroundColor
+                          : Colors.black,
                       child:
                           client.files[pagePosition].mimeType!.contains('video')
                               ? VideoPage(

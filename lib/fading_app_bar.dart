@@ -19,7 +19,7 @@ class FadingAppBar extends StatefulWidget implements PreferredSizeWidget {
 class _FadingAppBarState extends State<FadingAppBar>
     with TickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
-    duration: const Duration(milliseconds: 500),
+    duration: const Duration(milliseconds: 100),
     vsync: this,
   );
   late final Animation<double> _animation = CurvedAnimation(
@@ -56,19 +56,13 @@ class _FadingAppBarState extends State<FadingAppBar>
       _controller.reverse();
     }
 
-    return Positioned(
-      height: kToolbarHeight,
-      width: MediaQuery.of(context).size.width,
-      top: MediaQuery.of(context).viewPadding.top,
-      child: FadeTransition(
-        opacity: _animation,
-        child: AppBar(
-          shape: const Border(bottom: BorderSide(color: Colors.grey, width: 1)),
-          elevation: 0,
-          backgroundColor: const Color.fromARGB(100, 246, 246, 246),
-          title:
-              Text(widget.fileTime != null ? computeDay(widget.fileTime) : ''),
-        ),
+    return FadeTransition(
+      opacity: _animation,
+      child: AppBar(
+        shape: const Border(bottom: BorderSide(color: Colors.grey, width: 1)),
+        elevation: 0,
+        backgroundColor: const Color.fromARGB(255, 246, 246, 246),
+        title: Text(widget.fileTime != null ? computeDay(widget.fileTime) : ''),
       ),
     );
   }
