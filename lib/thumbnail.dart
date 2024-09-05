@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:piyp/database/database.dart';
+import 'package:piyp/main.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:flutter/services.dart' show ByteData, rootBundle;
@@ -50,15 +51,15 @@ class Thumbnail {
   static Future<Uint8List?> generateVideoThumbnail(
       String url, String eTag) async {
     try {
-      final preferences = await SharedPreferences.getInstance();
+      final List<ServerData> servers =
+          await database.select(database.server).get();
 
       final fileBytes = await VideoThumbnail.thumbnailData(
-        video: '${preferences.getString('webdav_uri')}/$url',
+        video: '${servers[0].uri}/$url',
         headers: {
-          'Authorization': webdav.BasicAuth(
-                  user: preferences.getString('webdav_user') ?? '',
-                  pwd: preferences.getString('webdav_password') ?? '')
-              .authorize('', '')
+          'Authorization':
+              webdav.BasicAuth(user: servers[0].username, pwd: servers[0].uri)
+                  .authorize('', '')
         },
         imageFormat: ImageFormat.JPEG,
         maxHeight: 500,

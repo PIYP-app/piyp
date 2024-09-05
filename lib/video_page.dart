@@ -3,8 +3,9 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:piyp/database/database.dart';
+import 'package:piyp/main.dart';
 import 'package:piyp/thumbnail.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 
 class VideoPage extends StatefulWidget {
@@ -45,7 +46,8 @@ class _VideoPageState extends State<VideoPage> {
   }
 
   _loadMedia() async {
-    final preferences = await SharedPreferences.getInstance();
+    final List<ServerData> servers =
+        await database.select(database.server).get();
 
     player.stream.width.listen((event) {
       if (event != null) {
@@ -58,12 +60,10 @@ class _VideoPageState extends State<VideoPage> {
     });
 
     await player.open(
-        Media(
-            '${preferences.getString('webdav_uri')}${preferences.getString('webdav_folder_path') ?? ''}/${widget.name}',
+        Media('${servers[0].uri}${servers[0].folderPath}/${widget.name}',
             httpHeaders: {
               'Authorization': webdav.BasicAuth(
-                      user: preferences.getString('webdav_user') ?? '',
-                      pwd: preferences.getString('webdav_password') ?? '')
+                      user: servers[0].username, pwd: servers[0].pwd)
                   .authorize('', '')
             }),
         play: false);

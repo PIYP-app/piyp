@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:piyp/database/database.dart';
 import 'package:piyp/image_card.dart';
+import 'package:piyp/main.dart';
 import 'package:piyp/webdav_client.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webdav_client/webdav_client.dart';
 
 class HomePage extends StatefulWidget {
@@ -48,20 +49,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   initWebdavClient() async {
-    final preferences = await SharedPreferences.getInstance();
-    final String? uri = preferences.getString('webdav_uri');
-    final String? username = preferences.getString('webdav_user');
-    final String? password = preferences.getString('webdav_password');
+    List<ServerData> servers = await database.select(database.server).get();
 
-    if (uri == null || username == null || password == null) {
-      if (mounted) {
-        setState(() {
-          errorMessage =
-              'No webDAV credentials found. Please configure them in the settings.';
-        });
-      }
-      return;
-    }
+    final String uri = servers[0].uri;
+    final String username = servers[0].username;
+    final String password = servers[0].pwd;
 
     client.client = Client(
       uri: uri,
@@ -73,7 +65,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   retrieveFileList() async {
-    final preferences = await SharedPreferences.getInstance();
+    List<ServerData> servers = await database.select(database.server).get();
 
     client.client.setHeaders({'Accept-Charset': 'utf-8'});
     client.client.setConnectTimeout(15000);
@@ -81,8 +73,7 @@ class _HomePageState extends State<HomePage> {
     client.client.setReceiveTimeout(15000);
 
     try {
-      var list = await client.client
-          .readDir(preferences.getString('webdav_folder_path') ?? '');
+      var list = await client.client.readDir(servers[0].folderPath ?? '');
 
       setState(() {
         list.removeWhere((element) =>

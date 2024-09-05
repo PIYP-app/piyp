@@ -1,7 +1,8 @@
+import 'package:drift/drift.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:piyp/database/database.dart';
+import 'package:piyp/main.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -15,7 +16,6 @@ class _SettingsPageState extends State<SettingsPage> {
   String username = '';
   String password = '';
   String folderPath = '';
-  late SharedPreferences preferences;
 
   @override
   void initState() {
@@ -24,16 +24,33 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   retrieveSharedPreferences() async {
-    preferences = await SharedPreferences.getInstance();
+    List<ServerData> servers = await database.select(database.server).get();
 
-    if (mounted) {
-      setState(() {
-        uri = preferences.getString('webdav_uri') ?? '';
-        username = preferences.getString('webdav_user') ?? '';
-        password = preferences.getString('webdav_password') ?? '';
-        folderPath = preferences.getString('webdav_folder_path') ?? '';
-      });
+    if (!mounted) {
+      return;
     }
+
+    setState(() {
+      uri = servers[0].uri;
+      username = servers[0].username;
+      password = servers[0].pwd;
+      folderPath = servers[0].folderPath ?? '';
+    });
+  }
+
+  updateSettingsInDb() async {
+    await database.into(database.server).insert(ServerCompanion.insert(
+          title: 'kdrive',
+          uri: uri,
+          username: username,
+          pwd: password,
+          folderPath: Value(folderPath),
+        ));
+
+    final List<ServerData> allItems =
+        await database.select(database.server).get();
+
+    print(allItems);
   }
 
   @override
@@ -51,7 +68,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: CupertinoTextField(
                   controller: TextEditingController(text: uri),
                   onChanged: (value) {
-                    preferences.setString('webdav_uri', value);
+                    if (!mounted) {
+                      return;
+                    }
+
+                    setState(() {
+                      uri = value;
+                    });
                   },
                 )),
             CupertinoFormRow(
@@ -59,7 +82,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: CupertinoTextField(
                   controller: TextEditingController(text: username),
                   onChanged: (value) {
-                    preferences.setString('webdav_user', value);
+                    if (!mounted) {
+                      return;
+                    }
+
+                    setState(() {
+                      username = value;
+                    });
                   },
                 )),
             CupertinoFormRow(
@@ -67,7 +96,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: CupertinoTextField(
                   controller: TextEditingController(text: password),
                   onChanged: (value) {
-                    preferences.setString('webdav_password', value);
+                    if (!mounted) {
+                      return;
+                    }
+
+                    setState(() {
+                      password = value;
+                    });
                   },
                 )),
             CupertinoFormRow(
@@ -75,9 +110,17 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: CupertinoTextField(
                   controller: TextEditingController(text: folderPath),
                   onChanged: (value) {
-                    preferences.setString('webdav_folder_path', value);
+                    if (!mounted) {
+                      return;
+                    }
+
+                    setState(() {
+                      folderPath = value;
+                    });
                   },
-                ))
+                )),
+            CupertinoButton.filled(
+                onPressed: updateSettingsInDb, child: const Text('Submit'))
           ],
         ));
   }

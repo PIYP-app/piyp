@@ -1,8 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:piyp/database/database.dart';
+import 'package:piyp/main.dart';
 import 'package:piyp/thumbnail.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 
@@ -34,7 +35,7 @@ class _PhotoPageState extends State<PhotoPage> {
   }
 
   Future<Widget> _retrievePhoto() async {
-    final preferences = await SharedPreferences.getInstance();
+    List<ServerData> servers = await database.select(database.server).get();
 
     return InteractiveViewer(
         boundaryMargin: const EdgeInsets.all(0.0),
@@ -42,12 +43,11 @@ class _PhotoPageState extends State<PhotoPage> {
         maxScale: 20,
         child: CachedNetworkImage(
           imageUrl:
-              '${preferences.getString('webdav_uri')}${preferences.getString('webdav_folder_path') ?? ''}/${widget.name}',
+              '${servers[0].uri}${servers[0].folderPath ?? ''}/${widget.name}',
           httpHeaders: {
-            'Authorization': webdav.BasicAuth(
-                    user: preferences.getString('webdav_user') ?? '',
-                    pwd: preferences.getString('webdav_password') ?? '')
-                .authorize('', '')
+            'Authorization':
+                webdav.BasicAuth(user: servers[0].username, pwd: servers[0].pwd)
+                    .authorize('', '')
           },
           progressIndicatorBuilder: (context, url, downloadProgress) =>
               _renderLoadingState(downloadProgress.progress),

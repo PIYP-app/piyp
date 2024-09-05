@@ -1,0 +1,8 @@
+CREATE TABLE Server (
+  id INT NOT NULL PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  uri TEXT NOT NULL,
+  username TEXT NOT NULL,
+  pwd TEXT NOT NULL,
+  folder_path TEXT
+);

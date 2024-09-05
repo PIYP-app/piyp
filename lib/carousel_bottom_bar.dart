@@ -1,11 +1,10 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:intl/intl.dart';
+import 'package:piyp/database/database.dart';
+import 'package:piyp/main.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class CarouselBottomBar extends StatefulWidget implements PreferredSizeWidget {
   const CarouselBottomBar({
@@ -83,11 +82,12 @@ class _CarouselBottomBarState extends State<CarouselBottomBar>
               InkWell(
                 child: const Icon(color: Colors.blue, CupertinoIcons.share),
                 onTap: () async {
-                  final preferences = await SharedPreferences.getInstance();
+                  List<ServerData> servers =
+                      await database.select(database.server).get();
 
                   final downloadImage = await DefaultCacheManager()
                       .getFileFromCache(
-                          '${preferences.getString('webdav_uri')}${preferences.getString('webdav_folder_path') ?? ''}/${widget.fileName}');
+                          '${servers[0].uri}${servers[0].folderPath ?? ''}/${widget.fileName}');
 
                   if (downloadImage == null) {
                     return;
