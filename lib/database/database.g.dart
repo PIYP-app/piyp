@@ -20,7 +20,7 @@ class Server extends Table with TableInfo<Server, ServerData> {
       'title', aliasedName, false,
       type: DriftSqlType.string,
       requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+      $customConstraints: 'NOT NULL UNIQUE');
   static const VerificationMeta _uriMeta = const VerificationMeta('uri');
   late final GeneratedColumn<String> uri = GeneratedColumn<String>(
       'uri', aliasedName, false,

@@ -12,40 +12,47 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  String uri = '';
-  String username = '';
-  String password = '';
-  String folderPath = '';
+  final TextEditingController uriInputController = TextEditingController();
+  final TextEditingController usernameInputController = TextEditingController();
+  final TextEditingController passwordInputController = TextEditingController();
+  final TextEditingController folderPathInputController =
+      TextEditingController();
+  List<ServerData> servers = [];
 
   @override
   void initState() {
     super.initState();
-    retrieveSharedPreferences();
+    retrieveServerFromDb();
   }
 
-  retrieveSharedPreferences() async {
-    List<ServerData> servers = await database.select(database.server).get();
+  retrieveServerFromDb() async {
+    List<ServerData> retrieveServers =
+        await database.select(database.server).get();
 
     if (!mounted) {
       return;
     }
 
     setState(() {
-      uri = servers[0].uri;
-      username = servers[0].username;
-      password = servers[0].pwd;
-      folderPath = servers[0].folderPath ?? '';
+      servers = retrieveServers;
+      uriInputController.text = servers[0].uri;
+      usernameInputController.text = servers[0].username;
+      passwordInputController.text = servers[0].pwd;
+      folderPathInputController.text = servers[0].folderPath ?? '';
     });
   }
 
   updateSettingsInDb() async {
-    await database.into(database.server).insert(ServerCompanion.insert(
-          title: 'kdrive',
-          uri: uri,
-          username: username,
-          pwd: password,
-          folderPath: Value(folderPath),
-        ));
+    await database.server.deleteAll();
+    await database.server.insertOne(
+        ServerCompanion(
+          title: const Value('kdrive'),
+          uri: Value(uriInputController.text),
+          username: Value(usernameInputController.text),
+          pwd: Value(passwordInputController.text),
+          folderPath: Value(folderPathInputController.text),
+        ),
+        mode: InsertMode.insertOrReplace);
 
     final List<ServerData> allItems =
         await database.select(database.server).get();
@@ -55,6 +62,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (servers.isEmpty) {
+      return const SizedBox();
+    }
+
     return Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
@@ -66,58 +77,22 @@ class _SettingsPageState extends State<SettingsPage> {
             CupertinoFormRow(
                 prefix: const Text('URL '),
                 child: CupertinoTextField(
-                  controller: TextEditingController(text: uri),
-                  onChanged: (value) {
-                    if (!mounted) {
-                      return;
-                    }
-
-                    setState(() {
-                      uri = value;
-                    });
-                  },
+                  controller: uriInputController,
                 )),
             CupertinoFormRow(
                 prefix: const Text('Username '),
                 child: CupertinoTextField(
-                  controller: TextEditingController(text: username),
-                  onChanged: (value) {
-                    if (!mounted) {
-                      return;
-                    }
-
-                    setState(() {
-                      username = value;
-                    });
-                  },
+                  controller: usernameInputController,
                 )),
             CupertinoFormRow(
                 prefix: const Text('Password '),
                 child: CupertinoTextField(
-                  controller: TextEditingController(text: password),
-                  onChanged: (value) {
-                    if (!mounted) {
-                      return;
-                    }
-
-                    setState(() {
-                      password = value;
-                    });
-                  },
+                  controller: passwordInputController,
                 )),
             CupertinoFormRow(
                 prefix: const Text('Folder path '),
                 child: CupertinoTextField(
-                  controller: TextEditingController(text: folderPath),
-                  onChanged: (value) {
-                    if (!mounted) {
-                      return;
-                    }
-
-                    setState(() {
-                      folderPath = value;
-                    });
-                  },
+                  controller: folderPathInputController,
                 )),
             CupertinoButton.filled(
                 onPressed: updateSettingsInDb, child: const Text('Submit'))
