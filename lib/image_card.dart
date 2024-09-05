@@ -46,7 +46,9 @@ class _ImageCardState extends State<ImageCard> {
   @override
   Widget build(BuildContext context) {
     if (compressedImage == null) {
-      return Text(widget.file.name ?? '');
+      return Container(
+        color: Colors.grey,
+      );
     }
 
     final mediaType =
