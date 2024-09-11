@@ -11,7 +11,7 @@ Afterwards you must run:
 
 ```sh
 $ mise plugins install android-sdk https://github.com/Syquel/mise-android-sdk.git
-$ mise install java yq # Install first because they are required by others tools
+$ mise install java yq jq # Install first because they are required by others tools
 $ mise install
 $ sdkmanager "platform-tools" "build-tools;33.0.3" "platforms;android-33" # Only if you want to build for android
 $ yes | flutter doctor --android-licenses # Only if you want to build for android

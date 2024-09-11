@@ -1,4 +1,5 @@
 [tools]
+jq = "1.7.1"
 yq = "4.43.1"
 java = "openjdk-17" # https://developer.android.com/build/jdks?hl=fr#compileSdk
 flutter = "3.24.2-stable"
