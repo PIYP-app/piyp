@@ -51,6 +51,10 @@ class _HomePageState extends State<HomePage> {
   initWebdavClient() async {
     List<ServerData> servers = await database.select(database.server).get();
 
+    if (servers.isEmpty) {
+      return;
+    }
+
     final String uri = servers[0].uri;
     final String username = servers[0].username;
     final String password = servers[0].pwd;

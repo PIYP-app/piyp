@@ -65,6 +65,7 @@ dependencies:
   drift: ^2.20.0
   drift_flutter: ^0.2.0
   path: ^1.9.0
+  photo_view: ^0.15.0
 
 dependency_overrides:
   media_kit:

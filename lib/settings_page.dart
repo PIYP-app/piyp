@@ -29,7 +29,7 @@ class _SettingsPageState extends State<SettingsPage> {
     List<ServerData> retrieveServers =
         await database.select(database.server).get();
 
-    if (!mounted) {
+    if (!mounted || retrieveServers.isEmpty) {
       return;
     }
 
@@ -53,19 +53,10 @@ class _SettingsPageState extends State<SettingsPage> {
           folderPath: Value(folderPathInputController.text),
         ),
         mode: InsertMode.insertOrReplace);
-
-    final List<ServerData> allItems =
-        await database.select(database.server).get();
-
-    print(allItems);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (servers.isEmpty) {
-      return const SizedBox();
-    }
-
     return Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,

@@ -100,7 +100,7 @@ class _CarouselBottomBarState extends State<CarouselBottomBar>
                           box!.localToGlobal(Offset.zero) & box.size);
 
                   if (result.status == ShareResultStatus.success) {
-                    print('Thank you for sharing the picture!');
+                    return;
                   }
                 },
               ),

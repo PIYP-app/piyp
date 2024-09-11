@@ -1,6 +1,7 @@
-import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:piyp/database/database.dart';
 import 'package:piyp/main.dart';
 import 'package:piyp/thumbnail.dart';
@@ -18,7 +19,7 @@ class PhotoPage extends StatefulWidget {
 }
 
 class _PhotoPageState extends State<PhotoPage> {
-  Uint8List? compressedImage;
+  File? compressedImage;
 
   @override
   void initState() {
@@ -37,27 +38,22 @@ class _PhotoPageState extends State<PhotoPage> {
   Future<Widget> _retrievePhoto() async {
     List<ServerData> servers = await database.select(database.server).get();
 
-    return InteractiveViewer(
-        boundaryMargin: const EdgeInsets.all(0.0),
-        minScale: 1,
-        maxScale: 20,
-        child: CachedNetworkImage(
-          imageUrl:
-              '${servers[0].uri}${servers[0].folderPath ?? ''}/${widget.name}',
-          httpHeaders: {
-            'Authorization':
-                webdav.BasicAuth(user: servers[0].username, pwd: servers[0].pwd)
-                    .authorize('', '')
-          },
-          progressIndicatorBuilder: (context, url, downloadProgress) =>
-              _renderLoadingState(downloadProgress.progress),
-          errorWidget: (context, url, error) => const Icon(Icons.error),
-        ));
+    return PhotoView(
+        // minScale: 1,
+        // maxScale: 20,
+        imageProvider: CachedNetworkImageProvider(
+      '${servers[0].uri}${servers[0].folderPath ?? ''}/${widget.name}',
+      headers: {
+        'Authorization':
+            webdav.BasicAuth(user: servers[0].username, pwd: servers[0].pwd)
+                .authorize('', '')
+      },
+    ));
   }
 
   _renderLoadingState(double? progress) {
     return compressedImage != null
-        ? Image.memory(
+        ? Image.file(
             compressedImage!,
             fit: BoxFit.contain,
           )

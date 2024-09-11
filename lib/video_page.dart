@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
@@ -19,7 +19,7 @@ class VideoPage extends StatefulWidget {
 }
 
 class _VideoPageState extends State<VideoPage> {
-  Uint8List? compressedImage;
+  File? compressedImage;
   late final Player player = Player();
   late final controller = VideoController(player);
   bool loaded = false;
@@ -74,7 +74,7 @@ class _VideoPageState extends State<VideoPage> {
     return Stack(alignment: AlignmentDirectional.center, children: [
       Video(controller: controller),
       compressedImage != null && !loaded
-          ? Image.memory(
+          ? Image.file(
               compressedImage!,
               width: double.infinity,
               height: double.infinity,
