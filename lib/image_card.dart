@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:piyp/thumbnail.dart';
 import 'package:piyp/webdav_client.dart';
 import 'package:webdav_client/webdav_client.dart';
@@ -26,15 +27,23 @@ class _ImageCardState extends State<ImageCard> {
   }
 
   getOrCreateThumbnail() async {
-    compressedImage = await Thumbnail.readThumbnail(widget.file.eTag!);
+    final retrievedThumbnail = await Thumbnail.readThumbnail(widget.file.eTag!);
+    compressedImage = retrievedThumbnail != null
+        ? await retrievedThumbnail.readAsBytes()
+        : null;
     if (compressedImage == null) {
       if (widget.file.mimeType!.contains('video')) {
         compressedImage = await Thumbnail.generateVideoThumbnail(
             widget.file.path!, widget.file.eTag!);
       } else {
-        List<int> fileByte = await webdavClient.client.read(widget.file.path!);
-        compressedImage = await Thumbnail.generatePhotoThumbnail(
-            Uint8List.fromList(fileByte), widget.file.eTag!);
+        try {
+          List<int> fileByte =
+              await webdavClient.client.read(widget.file.path!);
+          compressedImage = await Thumbnail.generatePhotoThumbnail(
+              Uint8List.fromList(fileByte), widget.file.eTag!);
+        } catch (e) {
+          print('Error generating thumbnail: $e');
+        }
       }
     }
 
@@ -61,12 +70,11 @@ class _ImageCardState extends State<ImageCard> {
             'name': widget.file.name ?? '',
           }).toString());
         }, // Handle your callback
-        child: Container(
-            decoration: BoxDecoration(
-          image: DecorationImage(
-            image: Image.memory(compressedImage!).image,
-            fit: BoxFit.cover,
-          ),
-        )));
+        child: PhotoView(
+          initialScale: PhotoViewComputedScale.covered,
+          imageProvider: Image.memory(compressedImage!).image,
+          heroAttributes: PhotoViewHeroAttributes(
+              tag: widget.file.eTag ?? '', transitionOnUserGestures: true),
+        ));
   }
 }

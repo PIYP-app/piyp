@@ -84,13 +84,12 @@ class Thumbnail {
     }
   }
 
-  static Future<Uint8List?> readThumbnail(String eTag) async {
+  static Future<File?> readThumbnail(String eTag) async {
     final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/thumbnails/$eTag');
 
     if (!await file.exists()) return null;
 
-    final bytes = await file.readAsBytes();
-    return bytes;
+    return file;
   }
 }
