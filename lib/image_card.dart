@@ -70,11 +70,16 @@ class _ImageCardState extends State<ImageCard> {
             'name': widget.file.name ?? '',
           }).toString());
         }, // Handle your callback
-        child: PhotoView(
-          initialScale: PhotoViewComputedScale.covered,
-          imageProvider: Image.memory(compressedImage!).image,
+        child: PhotoView.customChild(
           heroAttributes: PhotoViewHeroAttributes(
               tag: widget.file.eTag ?? '', transitionOnUserGestures: true),
+          child: Container(
+              decoration: BoxDecoration(
+            image: DecorationImage(
+              image: Image.memory(compressedImage!).image,
+              fit: BoxFit.cover,
+            ),
+          )),
         ));
   }
 }
