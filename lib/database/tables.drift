@@ -1,8 +1,20 @@
 CREATE TABLE Server (
-  id INT NOT NULL PRIMARY KEY AUTOINCREMENT,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  serverType TEXT NOT NULL CHECK(serverType IN ('webdav')),
   title TEXT NOT NULL UNIQUE,
   uri TEXT NOT NULL,
   username TEXT NOT NULL,
   pwd TEXT NOT NULL,
   folder_path TEXT
+);
+
+CREATE TABLE Photo (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  serverId INT NOT NULL,
+  eTag TEXT NOT NULL UNIQUE,
+  pathFile TEXT NOT NULL,
+  creationDate TEXT NOT NULL,
+  latitude  REAL,
+  longitude REAL,
+  FOREIGN KEY(serverId) REFERENCES Server(id)
 );
