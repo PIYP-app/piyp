@@ -1,11 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
-import 'package:piyp/database/database.dart';
 import 'package:piyp/thumbnail.dart';
 import 'package:piyp/router.dart';
-
-AppDb database = AppDb();
+import 'package:piyp/init_db.dart';
 
 void main() {
   runApp(const MyApp());

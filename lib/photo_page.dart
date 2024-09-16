@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:piyp/database/database.dart';
-import 'package:piyp/main.dart';
+import 'package:piyp/init_db.dart';
 import 'package:piyp/thumbnail.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;

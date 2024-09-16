@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:piyp/database/database.dart';
-import 'package:piyp/main.dart';
+import 'package:piyp/init_db.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:flutter/services.dart' show ByteData, rootBundle;

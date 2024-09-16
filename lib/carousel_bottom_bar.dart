@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:piyp/database/database.dart';
-import 'package:piyp/main.dart';
+import 'package:piyp/init_db.dart';
 import 'package:share_plus/share_plus.dart';
 
 class CarouselBottomBar extends StatefulWidget implements PreferredSizeWidget {

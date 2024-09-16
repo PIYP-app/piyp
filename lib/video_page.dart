@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:piyp/database/database.dart';
-import 'package:piyp/main.dart';
+import 'package:piyp/init_db.dart';
 import 'package:piyp/thumbnail.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 

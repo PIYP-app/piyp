@@ -2,7 +2,8 @@ import 'package:drift/drift.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:piyp/database/database.dart';
-import 'package:piyp/main.dart';
+import 'package:piyp/enum.dart';
+import 'package:piyp/init_db.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -47,6 +48,7 @@ class _SettingsPageState extends State<SettingsPage> {
     await database.server.insertOne(
         ServerCompanion(
           title: const Value('kdrive'),
+          serverType: Value(ServerType.webdav.value),
           uri: Value(uriInputController.text),
           username: Value(usernameInputController.text),
           pwd: Value(passwordInputController.text),
