@@ -3,14 +3,14 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:piyp/source.dart';
+import 'package:piyp/sources.dart';
 import 'package:piyp/thumbnail.dart';
-import 'package:piyp/webdav_client.dart';
-import 'package:webdav_client/webdav_client.dart';
 
 class ImageCard extends StatefulWidget {
   const ImageCard({super.key, required this.file});
 
-  final File file;
+  final SourceFile file;
 
   @override
   State<ImageCard> createState() => _ImageCardState();
@@ -18,7 +18,7 @@ class ImageCard extends StatefulWidget {
 
 class _ImageCardState extends State<ImageCard> {
   Uint8List? compressedImage;
-  WebdavClient webdavClient = WebdavClient();
+  Sources sources = Sources();
 
   @override
   void initState() {
@@ -37,8 +37,7 @@ class _ImageCardState extends State<ImageCard> {
             widget.file.path!, widget.file.eTag!);
       } else {
         try {
-          List<int> fileByte =
-              await webdavClient.client.read(widget.file.path!);
+          List<int> fileByte = await sources.sources[0].read(widget.file.path!);
           compressedImage = await Thumbnail.generatePhotoThumbnail(
               Uint8List.fromList(fileByte), widget.file.eTag!);
         } catch (e) {

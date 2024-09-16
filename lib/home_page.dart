@@ -1,10 +1,10 @@
+import 'package:exif/exif.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:piyp/database/database.dart';
+import 'package:piyp/classes/image_data.dart';
 import 'package:piyp/image_card.dart';
-import 'package:piyp/main.dart';
-import 'package:piyp/webdav_client.dart';
-import 'package:webdav_client/webdav_client.dart';
+import 'package:piyp/source.dart';
+import 'package:piyp/sources.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,20 +14,38 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  WebdavClient client = WebdavClient();
   final ScrollController _scrollController = ScrollController();
+  Sources sources = Sources();
   int _firstVisibleItemIndex = 0;
   String? errorMessage;
+  List<SourceFile> files = [];
 
   @override
   void initState() {
     super.initState();
-    initWebdavClient();
     initScrollController();
+    initSources();
+  }
+
+  void initSources() async {
+    await sources.connectAllSources();
+
+    if (!mounted) {
+      return;
+    }
+
+    final List<Future<void>> sourcesFileRetrieve =
+        sources.sources.map((source) {
+      return source.retrieveFileList();
+    }).toList();
+
+    await Future.wait(sourcesFileRetrieve);
+
+    setState(() {});
   }
 
   void scrollListenerWithItemCount() {
-    int itemCount = client.files.length;
+    int itemCount = files.length;
     double scrollOffset = _scrollController.position.pixels;
     double viewportHeight = _scrollController.position.viewportDimension;
     double scrollRange = _scrollController.position.maxScrollExtent -
@@ -48,56 +66,6 @@ class _HomePageState extends State<HomePage> {
     _scrollController.addListener(scrollListenerWithItemCount);
   }
 
-  initWebdavClient() async {
-    List<ServerData> servers = await database.select(database.server).get();
-
-    if (servers.isEmpty) {
-      return;
-    }
-
-    final String uri = servers[0].uri;
-    final String username = servers[0].username;
-    final String password = servers[0].pwd;
-
-    client.client = Client(
-      uri: uri,
-      c: WdDio(),
-      auth: BasicAuth(user: username, pwd: password),
-    );
-
-    await retrieveFileList();
-  }
-
-  retrieveFileList() async {
-    List<ServerData> servers = await database.select(database.server).get();
-
-    client.client.setHeaders({'Accept-Charset': 'utf-8'});
-    client.client.setConnectTimeout(15000);
-    client.client.setSendTimeout(15000);
-    client.client.setReceiveTimeout(15000);
-
-    try {
-      var list = await client.client.readDir(servers[0].folderPath ?? '');
-
-      setState(() {
-        list.removeWhere((element) =>
-            !element.mimeType!.contains('video') &&
-            !element.mimeType!.contains('image'));
-        client.files = list;
-        client.files.sort((a, b) => b.mTime!.compareTo(a.mTime!));
-        errorMessage = null;
-      });
-    } catch (e) {
-      print(e);
-      if (mounted) {
-        setState(() {
-          errorMessage =
-              'Failed to retrieve file list, verify your webdav credentials.';
-        });
-      }
-    }
-  }
-
   computeDay(DateTime? dateTime) {
     final DateTime definedDateTime = dateTime ?? DateTime.now();
 
@@ -110,6 +78,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (sources.sources.isEmpty) {
+      return const Text('No source configured yet.');
+    }
     return Scaffold(
         extendBodyBehindAppBar: true,
         extendBody: true,
@@ -120,15 +91,16 @@ class _HomePageState extends State<HomePage> {
           elevation: 0,
           backgroundColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
-          title: Text(client.files.isNotEmpty
-              ? computeDay(client.files[_firstVisibleItemIndex].mTime)
+          title: Text(sources.sources[0].files.isNotEmpty
+              ? computeDay(
+                  sources.sources[0].files[_firstVisibleItemIndex].mTime)
               : ''),
           toolbarHeight: 20,
         ),
         body: Center(
           child: errorMessage != null
               ? Text(errorMessage!)
-              : (client.files.isEmpty
+              : (sources.sources[0].files.isEmpty
                   ? const CircularProgressIndicator()
                   : GridView.builder(
                       controller: _scrollController,
@@ -139,132 +111,164 @@ class _HomePageState extends State<HomePage> {
                               mainAxisSpacing: 2),
                       padding: const EdgeInsets.only(
                           left: 2, right: 2, bottom: 2, top: 100),
-                      itemCount: client.files.length,
+                      itemCount: sources.sources[0].files.length,
                       itemBuilder: (context, index) {
-                        // client.read(files![index].path!).then((value) =>
-                        //     readExifFromBytes(value).then((value) {
-                        //       final test = ImageExif(
-                        //         make: value['Image Make']?.printable ?? '',
-                        //         model: value['Image Model']?.printable,
-                        //         orientation: value['Image Orientation']?.printable,
-                        //         xResolution: int.parse(
-                        //             value['Image XResolution']?.printable ?? '0'),
-                        //         yResolution: int.parse(
-                        //             value['Image YResolution']?.printable ?? '0'),
-                        //         resolutionUnit:
-                        //             value['Image ResolutionUnit']?.printable,
-                        //         software: value['Image Software']?.printable,
-                        //         dateTime: value['Image DateTime']?.printable,
-                        //         hostComputer:
-                        //             value['Image HostComputer']?.printable,
-                        //         tileWidth:
-                        //             0, // int.parse(value['Image TileWidth']?.printable),
-                        //         tileLength:
-                        //             0, // int.parse(value['Image TileLength']?.printable),
-                        //         exifOffset: int.parse(
-                        //             value['Image ExifOffset']?.printable ?? '0'),
-                        //         GPS: ExifGPS(
-                        //             GPSLatitudeRef:
-                        //                 value['GPS GPSLatitudeRef']?.printable,
-                        //             GPSLatitude: value['GPS GPSLatitude']?.values.toList()
-                        //                 as List<Ratio>?,
-                        //             GPSLongitudeRef:
-                        //                 value['GPS GPSLongitudeRef']?.printable,
-                        //             GPSLongitude: value['GPS GPSLongitude']?.values.toList()
-                        //                 as List<Ratio>?,
-                        //             GPSAltitudeRef: int.parse(
-                        //                 value['GPS GPSAltitudeRef']?.printable ??
+                        // client.client.read(client.files[index].path!).then(
+                        //     (value) => readExifFromBytes(value).then((value) {
+                        //           final test = ImageExif(
+                        //             make: value['Image Make']?.printable ?? '',
+                        //             model: value['Image Model']?.printable,
+                        //             orientation:
+                        //                 value['Image Orientation']?.printable,
+                        //             xResolution: int.parse(
+                        //                 value['Image XResolution']?.printable ??
                         //                     '0'),
-                        //             GPSAltitude:
-                        //                 value['GPS GPSAltitude']?.printable,
-                        //             GPSTimeStamp: value['GPS GPSTimeStamp']
-                        //                 ?.values
-                        //                 .toList() as List<Ratio>?,
-                        //             GPSSpeedRef:
-                        //                 value['GPS GPSSpeedRef']?.printable,
-                        //             GPSSpeed: value['GPS GPSSpeed']?.values.toList()[0]
-                        //                 as Ratio?,
-                        //             GPSImgDirectionRef:
-                        //                 value['GPS GPSImgDirectionRef']?.printable,
-                        //             GPSImgDirection: value['GPS GPSImgDirection']?.printable,
-                        //             GPSDestBearingRef: value['GPS GPSDestBearingRef']?.printable,
-                        //             GPSDestBearing: value['GPS GPSDestBearing']?.printable,
-                        //             GPSDate: value['GPS GPSDate'] != null ? DateTime.parse(value['GPS GPSDate']!.printable.replaceAll(':', '-')) : null,
-                        //             Tag0x001F: int.parse(value['Tag 0x001F']?.printable ?? '0')),
-                        //         EXIF: ExifPhoto(
-                        //           exposureTime:
-                        //               value['EXIF ExposureTime']?.printable,
-                        //           fNumber: value['EXIF FNumber']?.printable,
-                        //           exposureProgram:
-                        //               value['EXIF ExposureProgram']?.printable,
-                        //           isoSpeedRatings: int.parse(
-                        //               value['EXIF ISOSpeedRatings']?.printable ??
-                        //                   '0'),
-                        //           exifVersion: value['EXIF ExifVersion']?.printable,
-                        //           dateTimeOriginal:
-                        //               value['EXIF DateTimeOriginal']?.printable,
-                        //           dateTimeDigitized:
-                        //               value['EXIF DateTimeDigitized']?.printable,
-                        //           offsetTime: value['EXIF OffsetTime']?.printable,
-                        //           offsetTimeOriginal:
-                        //               value['EXIF OffsetTimeOriginal']?.printable,
-                        //           offsetTimeDigitized:
-                        //               value['EXIF OffsetTimeDigitized']?.printable,
-                        //           shutterSpeedValue:
-                        //               value['EXIF ShutterSpeedValue']?.printable,
-                        //           apertureValue:
-                        //               value['EXIF ApertureValue']?.printable,
-                        //           brightnessValue:
-                        //               value['EXIF BrightnessValue']?.printable,
-                        //           exposureBiasValue:
-                        //               value['EXIF ExposureBiasValue']?.printable,
-                        //           meteringMode:
-                        //               value['EXIF MeteringMode']?.printable,
-                        //           flash: value['EXIF Flash']?.printable,
-                        //           focalLength: value['EXIF FocalLength']?.printable,
-                        //           subjectArea: value['EXIF SubjectArea']
-                        //               ?.values
-                        //               .toList() as List<int>?,
-                        //           makerNote: value['EXIF MakerNote']
-                        //               ?.values
-                        //               .toList() as List<int>?,
-                        //           subSecTimeOriginal: int.parse(
-                        //               value['EXIF SubSecTimeOriginal']?.printable ??
-                        //                   '0'),
-                        //           subSecTimeDigitized: int.parse(
-                        //               value['EXIF SubSecTimeDigitized']
-                        //                       ?.printable ??
-                        //                   '0'),
-                        //           colorSpace: value['EXIF ColorSpace']?.printable,
-                        //           exifImageWidth: int.parse(
-                        //               value['EXIF ExifImageWidth']?.printable ??
-                        //                   '0'),
-                        //           exifImageLength: int.parse(
-                        //               value['EXIF ExifImageLength']?.printable ??
-                        //                   '0'),
-                        //           sensingMethod:
-                        //               value['EXIF SensingMethod']?.printable,
-                        //           sceneType: value['EXIF SceneType']?.printable,
-                        //           exposureMode:
-                        //               value['EXIF ExposureMode']?.printable,
-                        //           whiteBalance:
-                        //               value['EXIF WhiteBalance']?.printable,
-                        //           focalLengthIn35mmFilm: int.parse(
-                        //               value['EXIF FocalLengthIn35mmFilm']
-                        //                       ?.printable ??
-                        //                   '0'),
-                        //           lensSpecification: value['EXIF LensSpecification']
-                        //               ?.values
-                        //               .toList() as List<Ratio>?,
-                        //           lensMake: value['EXIF LensMake']?.printable,
-                        //           lensModel: value['EXIF LensModel']?.printable,
-                        //           tag0xA460: int.parse(
-                        //               value['Tag 0xA460']?.printable ?? '0'),
-                        //         ),
-                        //       );
-                        //     }));
+                        //             yResolution: int.parse(
+                        //                 value['Image YResolution']?.printable ??
+                        //                     '0'),
+                        //             resolutionUnit:
+                        //                 value['Image ResolutionUnit']
+                        //                     ?.printable,
+                        //             software:
+                        //                 value['Image Software']?.printable,
+                        //             dateTime:
+                        //                 value['Image DateTime']?.printable,
+                        //             hostComputer:
+                        //                 value['Image HostComputer']?.printable,
+                        //             tileWidth:
+                        //                 0, // int.parse(value['Image TileWidth']?.printable),
+                        //             tileLength:
+                        //                 0, // int.parse(value['Image TileLength']?.printable),
+                        //             exifOffset: int.parse(
+                        //                 value['Image ExifOffset']?.printable ??
+                        //                     '0'),
+                        //             GPS: ExifGPS(
+                        //                 GPSLatitudeRef: value['GPS GPSLatitudeRef']
+                        //                     ?.printable,
+                        //                 GPSLatitude: value['GPS GPSLatitude']
+                        //                     ?.values
+                        //                     .toList() as List<Ratio>?,
+                        //                 GPSLongitudeRef: value['GPS GPSLongitudeRef']
+                        //                     ?.printable,
+                        //                 GPSLongitude: value['GPS GPSLongitude']
+                        //                     ?.values
+                        //                     .toList() as List<Ratio>?,
+                        //                 GPSAltitudeRef: int.parse(
+                        //                     value['GPS GPSAltitudeRef']?.printable ??
+                        //                         '0'),
+                        //                 GPSAltitude:
+                        //                     value['GPS GPSAltitude']?.printable,
+                        //                 GPSTimeStamp: value['GPS GPSTimeStamp']
+                        //                     ?.values
+                        //                     .toList() as List<Ratio>?,
+                        //                 GPSSpeedRef:
+                        //                     value['GPS GPSSpeedRef']?.printable,
+                        //                 GPSSpeed: value['GPS GPSSpeed']?.values.toList()[0] as Ratio?,
+                        //                 GPSImgDirectionRef: value['GPS GPSImgDirectionRef']?.printable,
+                        //                 GPSImgDirection: value['GPS GPSImgDirection']?.printable,
+                        //                 GPSDestBearingRef: value['GPS GPSDestBearingRef']?.printable,
+                        //                 GPSDestBearing: value['GPS GPSDestBearing']?.printable,
+                        //                 GPSDate: value['GPS GPSDate'] != null ? DateTime.parse(value['GPS GPSDate']!.printable.replaceAll(':', '-')) : null,
+                        //                 Tag0x001F: int.parse(value['Tag 0x001F']?.printable ?? '0')),
+                        //             EXIF: ExifPhoto(
+                        //               exposureTime:
+                        //                   value['EXIF ExposureTime']?.printable,
+                        //               fNumber: value['EXIF FNumber']?.printable,
+                        //               exposureProgram:
+                        //                   value['EXIF ExposureProgram']
+                        //                       ?.printable,
+                        //               isoSpeedRatings: int.parse(
+                        //                   value['EXIF ISOSpeedRatings']
+                        //                           ?.printable ??
+                        //                       '0'),
+                        //               exifVersion:
+                        //                   value['EXIF ExifVersion']?.printable,
+                        //               dateTimeOriginal:
+                        //                   value['EXIF DateTimeOriginal']
+                        //                       ?.printable,
+                        //               dateTimeDigitized:
+                        //                   value['EXIF DateTimeDigitized']
+                        //                       ?.printable,
+                        //               offsetTime:
+                        //                   value['EXIF OffsetTime']?.printable,
+                        //               offsetTimeOriginal:
+                        //                   value['EXIF OffsetTimeOriginal']
+                        //                       ?.printable,
+                        //               offsetTimeDigitized:
+                        //                   value['EXIF OffsetTimeDigitized']
+                        //                       ?.printable,
+                        //               shutterSpeedValue:
+                        //                   value['EXIF ShutterSpeedValue']
+                        //                       ?.printable,
+                        //               apertureValue: value['EXIF ApertureValue']
+                        //                   ?.printable,
+                        //               brightnessValue:
+                        //                   value['EXIF BrightnessValue']
+                        //                       ?.printable,
+                        //               exposureBiasValue:
+                        //                   value['EXIF ExposureBiasValue']
+                        //                       ?.printable,
+                        //               meteringMode:
+                        //                   value['EXIF MeteringMode']?.printable,
+                        //               flash: value['EXIF Flash']?.printable,
+                        //               focalLength:
+                        //                   value['EXIF FocalLength']?.printable,
+                        //               subjectArea: value['EXIF SubjectArea']
+                        //                   ?.values
+                        //                   .toList() as List<int>?,
+                        //               makerNote: value['EXIF MakerNote']
+                        //                   ?.values
+                        //                   .toList() as List<int>?,
+                        //               subSecTimeOriginal: int.parse(
+                        //                   value['EXIF SubSecTimeOriginal']
+                        //                           ?.printable ??
+                        //                       '0'),
+                        //               subSecTimeDigitized: int.parse(
+                        //                   value['EXIF SubSecTimeDigitized']
+                        //                           ?.printable ??
+                        //                       '0'),
+                        //               colorSpace:
+                        //                   value['EXIF ColorSpace']?.printable,
+                        //               exifImageWidth: int.parse(
+                        //                   value['EXIF ExifImageWidth']
+                        //                           ?.printable ??
+                        //                       '0'),
+                        //               exifImageLength: int.parse(
+                        //                   value['EXIF ExifImageLength']
+                        //                           ?.printable ??
+                        //                       '0'),
+                        //               sensingMethod: value['EXIF SensingMethod']
+                        //                   ?.printable,
+                        //               sceneType:
+                        //                   value['EXIF SceneType']?.printable,
+                        //               exposureMode:
+                        //                   value['EXIF ExposureMode']?.printable,
+                        //               whiteBalance:
+                        //                   value['EXIF WhiteBalance']?.printable,
+                        //               focalLengthIn35mmFilm: int.parse(
+                        //                   value['EXIF FocalLengthIn35mmFilm']
+                        //                           ?.printable ??
+                        //                       '0'),
+                        //               lensSpecification:
+                        //                   value['EXIF LensSpecification']
+                        //                       ?.values
+                        //                       .toList() as List<Ratio>?,
+                        //               lensMake:
+                        //                   value['EXIF LensMake']?.printable,
+                        //               lensModel:
+                        //                   value['EXIF LensModel']?.printable,
+                        //               tag0xA460: int.parse(
+                        //                   value['Tag 0xA460']?.printable ??
+                        //                       '0'),
+                        //             ),
+                        //           );
+
+                        //           if (test.GPS?.GPSLatitude != null) {
+                        //             print(test);
+                        //           }
+                        //         }));
                         return ImageCard(
-                          file: client.files[index],
+                          file: sources.sources[0].files[index],
                         );
                       })),
         ));
