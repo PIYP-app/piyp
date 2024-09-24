@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:piyp/thumbnail.dart';
 import 'package:piyp/router.dart';
+// ignore: unused_import
 import 'package:piyp/init_db.dart';
 
 void main() {

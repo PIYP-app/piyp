@@ -41,7 +41,6 @@ final appRouter = GoRouter(
         path: '/videos/:eTag',
         builder: (context, state) => VideoPage(
               eTag: state.pathParameters['eTag'],
-              name: state.uri.queryParameters['name']!,
             ))
   ],
 );

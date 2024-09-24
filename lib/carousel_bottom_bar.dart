@@ -2,19 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:intl/intl.dart';
-import 'package:piyp/database/database.dart';
-import 'package:piyp/init_db.dart';
+import 'package:piyp/source.dart';
 import 'package:share_plus/share_plus.dart';
 
 class CarouselBottomBar extends StatefulWidget implements PreferredSizeWidget {
   const CarouselBottomBar({
     super.key,
     required this.visibility,
-    required this.fileName,
+    required this.file,
   });
 
   final bool visibility;
-  final String? fileName;
+  final SourceFile file;
 
   @override
   State<CarouselBottomBar> createState() => _CarouselBottomBarState();
@@ -82,12 +81,9 @@ class _CarouselBottomBarState extends State<CarouselBottomBar>
               InkWell(
                 child: const Icon(color: Colors.blue, CupertinoIcons.share),
                 onTap: () async {
-                  List<ServerData> servers =
-                      await database.select(database.server).get();
-
                   final downloadImage = await DefaultCacheManager()
                       .getFileFromCache(
-                          '${servers[0].uri}${servers[0].folderPath ?? ''}/${widget.fileName}');
+                          '${widget.file.server.getBaseUrl()}/${widget.file.name}');
 
                   if (downloadImage == null) {
                     return;

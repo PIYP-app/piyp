@@ -1,4 +1,5 @@
 class SourceFile {
+  Source server;
   String? path;
   bool? isDir;
   String? name;
@@ -9,6 +10,7 @@ class SourceFile {
   DateTime? mTime;
 
   SourceFile({
+    required this.server,
     this.path,
     this.isDir,
     this.name,
@@ -23,9 +25,16 @@ class SourceFile {
 abstract class Source {
   final int id;
   List<SourceFile> files = [];
+  bool isErrored = false;
 
   Source(this.id);
 
+  get username => null;
+  get pwd => null;
+
+  String getBaseUrl();
+
   Future<List<int>> read(String path);
   Future<void> retrieveFileList();
+  Future<void> testServerConnection();
 }

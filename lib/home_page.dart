@@ -34,14 +34,11 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    final List<Future<void>> sourcesFileRetrieve =
-        sources.sources.map((source) {
-      return source.retrieveFileList();
-    }).toList();
+    await sources.retrieveAllFiles();
 
-    await Future.wait(sourcesFileRetrieve);
-
-    setState(() {});
+    setState(() {
+      files = sources.getAllFiles();
+    });
   }
 
   void scrollListenerWithItemCount() {
@@ -91,16 +88,15 @@ class _HomePageState extends State<HomePage> {
           elevation: 0,
           backgroundColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
-          title: Text(sources.sources[0].files.isNotEmpty
-              ? computeDay(
-                  sources.sources[0].files[_firstVisibleItemIndex].mTime)
+          title: Text(files.isNotEmpty
+              ? computeDay(files[_firstVisibleItemIndex].mTime)
               : ''),
           toolbarHeight: 20,
         ),
         body: Center(
           child: errorMessage != null
               ? Text(errorMessage!)
-              : (sources.sources[0].files.isEmpty
+              : (files.isEmpty
                   ? const CircularProgressIndicator()
                   : GridView.builder(
                       controller: _scrollController,
@@ -111,7 +107,7 @@ class _HomePageState extends State<HomePage> {
                               mainAxisSpacing: 2),
                       padding: const EdgeInsets.only(
                           left: 2, right: 2, bottom: 2, top: 100),
-                      itemCount: sources.sources[0].files.length,
+                      itemCount: files.length,
                       itemBuilder: (context, index) {
                         // client.client.read(client.files[index].path!).then(
                         //     (value) => readExifFromBytes(value).then((value) {
@@ -268,7 +264,7 @@ class _HomePageState extends State<HomePage> {
                         //           }
                         //         }));
                         return ImageCard(
-                          file: sources.sources[0].files[index],
+                          file: files[index],
                         );
                       })),
         ));

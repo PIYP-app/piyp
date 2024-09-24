@@ -4,7 +4,9 @@ import 'package:webdav_client/webdav_client.dart';
 class WebdavClient extends Source {
   late Client client;
   final String uri;
+  @override
   final String username;
+  @override
   final String pwd;
   final String folderPath;
 
@@ -25,7 +27,24 @@ class WebdavClient extends Source {
   }
 
   @override
+  Future<void> testServerConnection() async {
+    try {
+      await client.ping();
+    } catch (e) {
+      isErrored = true;
+    }
+  }
+
+  @override
+  String getBaseUrl() {
+    return uri + folderPath;
+  }
+
+  @override
   Future<void> retrieveFileList() async {
+    if (isErrored) {
+      return;
+    }
     client.setHeaders({'Accept-Charset': 'utf-8'});
     client.setConnectTimeout(15000);
     client.setSendTimeout(15000);
@@ -38,6 +57,7 @@ class WebdavClient extends Source {
         !element.mimeType!.contains('image'));
     files = list.map((toElement) {
       return SourceFile(
+        server: this,
         path: toElement.name,
         isDir: toElement.isDir,
         name: toElement.name,

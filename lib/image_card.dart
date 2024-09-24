@@ -33,11 +33,10 @@ class _ImageCardState extends State<ImageCard> {
         : null;
     if (compressedImage == null) {
       if (widget.file.mimeType!.contains('video')) {
-        compressedImage = await Thumbnail.generateVideoThumbnail(
-            widget.file.path!, widget.file.eTag!);
+        compressedImage = await Thumbnail.generateVideoThumbnail(widget.file);
       } else {
         try {
-          List<int> fileByte = await sources.sources[0].read(widget.file.path!);
+          List<int> fileByte = await widget.file.server.read(widget.file.path!);
           compressedImage = await Thumbnail.generatePhotoThumbnail(
               Uint8List.fromList(fileByte), widget.file.eTag!);
         } catch (e) {

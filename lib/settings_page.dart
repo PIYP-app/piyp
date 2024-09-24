@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:piyp/database/database.dart';
 import 'package:piyp/enum.dart';
 import 'package:piyp/init_db.dart';
+import 'package:piyp/sources.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -13,12 +14,14 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  final TextEditingController titleInputController = TextEditingController();
   final TextEditingController uriInputController = TextEditingController();
   final TextEditingController usernameInputController = TextEditingController();
   final TextEditingController passwordInputController = TextEditingController();
   final TextEditingController folderPathInputController =
       TextEditingController();
   List<ServerData> servers = [];
+  Sources sources = Sources();
 
   @override
   void initState() {
@@ -36,18 +39,31 @@ class _SettingsPageState extends State<SettingsPage> {
 
     setState(() {
       servers = retrieveServers;
-      uriInputController.text = servers[0].uri;
-      usernameInputController.text = servers[0].username;
-      passwordInputController.text = servers[0].pwd;
-      folderPathInputController.text = servers[0].folderPath ?? '';
     });
   }
 
-  updateSettingsInDb() async {
-    await database.server.deleteAll();
+  // updateSettingsInDb() async {
+  //   await database.server.insertOne(
+  //       ServerCompanion(
+  //         id: Value(servers[0].id),
+  //         title: Value(titleInputController.text),
+  //         serverType: Value(ServerType.webdav.value),
+  //         uri: Value(uriInputController.text),
+  //         username: Value(usernameInputController.text),
+  //         pwd: Value(passwordInputController.text),
+  //         folderPath: Value(folderPathInputController.text),
+  //       ),
+  //       mode: InsertMode.insertOrReplace);
+
+  //   List<ServerData> ttt = await database.select(database.server).get();
+
+  //   print(ttt);
+  // }
+
+  addNewServer() async {
     await database.server.insertOne(
         ServerCompanion(
-          title: const Value('kdrive'),
+          title: Value(titleInputController.text),
           serverType: Value(ServerType.webdav.value),
           uri: Value(uriInputController.text),
           username: Value(usernameInputController.text),
@@ -55,6 +71,29 @@ class _SettingsPageState extends State<SettingsPage> {
           folderPath: Value(folderPathInputController.text),
         ),
         mode: InsertMode.insertOrReplace);
+
+    List<ServerData> retrieveServers =
+        await database.select(database.server).get();
+
+    setState(() {
+      servers = retrieveServers;
+      titleInputController.text = '';
+      usernameInputController.text = '';
+      passwordInputController.text = '';
+      folderPathInputController.text = '';
+    });
+  }
+
+  removeServerFromDb(ServerData server) async {
+    await database.server.deleteOne(server);
+
+    setState(() {
+      servers.remove(server);
+    });
+
+    List<ServerData> ttt = await database.select(database.server).get();
+
+    print(ttt);
   }
 
   @override
@@ -64,32 +103,58 @@ class _SettingsPageState extends State<SettingsPage> {
           automaticallyImplyLeading: false,
           toolbarHeight: 0,
         ),
-        body: CupertinoFormSection(
-          header: const Text('Webdav server'),
-          children: [
-            CupertinoFormRow(
-                prefix: const Text('URL '),
-                child: CupertinoTextField(
-                  controller: uriInputController,
-                )),
-            CupertinoFormRow(
-                prefix: const Text('Username '),
-                child: CupertinoTextField(
+        body: ListView(children: [
+          servers.isNotEmpty
+              ? CupertinoFormSection(
+                  header: const Text('WebDAV servers'),
+                  children: servers
+                      .map((server) => Dismissible(
+                          key: Key(server.hashCode.toString()),
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            color: Colors.red,
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
+                            ),
+                          ),
+                          onDismissed: (direction) {
+                            removeServerFromDb(server);
+                          },
+                          child: CupertinoListTile(
+                            title: Text(server.title),
+                            // leading: const Icon(Icons.warning),
+                          )))
+                      .toList(),
+                )
+              : const SizedBox(),
+          CupertinoFormSection(
+            header: const Text('Add a webDAV server'),
+            children: [
+              CupertinoTextFormFieldRow(
+                prefix: const Text('Title'),
+                controller: titleInputController,
+              ),
+              CupertinoTextFormFieldRow(
+                prefix: const Text('URL'),
+                controller: uriInputController,
+              ),
+              CupertinoTextFormFieldRow(
                   controller: usernameInputController,
-                )),
-            CupertinoFormRow(
-                prefix: const Text('Password '),
-                child: CupertinoTextField(
-                  controller: passwordInputController,
-                )),
-            CupertinoFormRow(
-                prefix: const Text('Folder path '),
-                child: CupertinoTextField(
-                  controller: folderPathInputController,
-                )),
-            CupertinoButton.filled(
-                onPressed: updateSettingsInDb, child: const Text('Submit'))
-          ],
-        ));
+                  prefix: const Text('Username')),
+              CupertinoTextFormFieldRow(
+                  prefix: const Text('Password'),
+                  controller: passwordInputController),
+              CupertinoTextFormFieldRow(
+                prefix: const Text('Folder path'),
+                controller: folderPathInputController,
+              ),
+              CupertinoButton.filled(
+                  onPressed: addNewServer, child: const Text('Submit'))
+            ],
+          )
+        ]));
   }
 }

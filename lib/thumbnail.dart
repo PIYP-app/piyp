@@ -1,12 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:piyp/database/database.dart';
-import 'package:piyp/init_db.dart';
+import 'package:piyp/source.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
-import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:flutter/services.dart' show ByteData, rootBundle;
 
 class Thumbnail {
@@ -48,18 +47,14 @@ class Thumbnail {
     return fileBytes;
   }
 
-  static Future<Uint8List?> generateVideoThumbnail(
-      String url, String eTag) async {
+  static Future<Uint8List?> generateVideoThumbnail(SourceFile file) async {
     try {
-      final List<ServerData> servers =
-          await database.select(database.server).get();
-
       final fileBytes = await VideoThumbnail.thumbnailData(
-        video: '${servers[0].uri}/$url',
+        video: file.server.getBaseUrl() + file.path!,
         headers: {
-          'Authorization':
-              webdav.BasicAuth(user: servers[0].username, pwd: servers[0].uri)
-                  .authorize('', '')
+          'Authorization': 'Basic ${base64Encode(
+            utf8.encode('${file.server.username}:${file.server.pwd}'),
+          )}'
         },
         imageFormat: ImageFormat.JPEG,
         maxHeight: 500,
@@ -70,7 +65,7 @@ class Thumbnail {
         return null;
       }
 
-      await saveThumbnail(eTag, fileBytes);
+      await saveThumbnail(file.eTag!, fileBytes);
 
       return fileBytes;
     } catch (error) {
@@ -78,7 +73,7 @@ class Thumbnail {
       var fileBytes =
           data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
 
-      await saveThumbnail(eTag, fileBytes);
+      await saveThumbnail(file.eTag!, fileBytes);
 
       return fileBytes;
     }
