@@ -8,13 +8,26 @@ CREATE TABLE Server (
   folder_path TEXT
 );
 
-CREATE TABLE Photo (
+CREATE TABLE Media (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   serverId INT NOT NULL,
-  eTag TEXT NOT NULL UNIQUE,
+  eTag TEXT NOT NULL UNIQUE ON CONFLICT REPLACE,
+  mimeType TEXT NOT NULL CHECK(mimeType IN ('image', 'video')),
   pathFile TEXT NOT NULL,
   creationDate TEXT NOT NULL,
   latitude  REAL,
   longitude REAL,
   FOREIGN KEY(serverId) REFERENCES Server(id)
 );
+
+insertMediaOnConflictUpdateEtag: INSERT INTO Media (serverId, eTag, mimeType, pathFile, creationDate, latitude, longitude)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(eTag)
+DO UPDATE SET
+  serverId = excluded.serverId,
+  eTag = excluded.eTag,
+  mimeType = excluded.mimeType,
+  pathFile = excluded.pathFile,
+  creationDate = excluded.creationDate,
+  latitude = excluded.latitude,
+  longitude = excluded.longitude;

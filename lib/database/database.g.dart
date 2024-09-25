@@ -387,11 +387,11 @@ class ServerCompanion extends UpdateCompanion<ServerData> {
   }
 }
 
-class Photo extends Table with TableInfo<Photo, PhotoData> {
+class Media extends Table with TableInfo<Media, MediaData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  Photo(this.attachedDatabase, [this._alias]);
+  Media(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
       'id', aliasedName, false,
@@ -411,7 +411,15 @@ class Photo extends Table with TableInfo<Photo, PhotoData> {
       'eTag', aliasedName, false,
       type: DriftSqlType.string,
       requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL UNIQUE');
+      $customConstraints: 'NOT NULL UNIQUE ON CONFLICT REPLACE');
+  static const VerificationMeta _mimeTypeMeta =
+      const VerificationMeta('mimeType');
+  late final GeneratedColumn<String> mimeType = GeneratedColumn<String>(
+      'mimeType', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      $customConstraints:
+          'NOT NULL CHECK (mimeType IN (\'image\', \'video\'))');
   static const VerificationMeta _pathFileMeta =
       const VerificationMeta('pathFile');
   late final GeneratedColumn<String> pathFile = GeneratedColumn<String>(
@@ -441,15 +449,23 @@ class Photo extends Table with TableInfo<Photo, PhotoData> {
       requiredDuringInsert: false,
       $customConstraints: '');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, serverId, eTag, pathFile, creationDate, latitude, longitude];
+  List<GeneratedColumn> get $columns => [
+        id,
+        serverId,
+        eTag,
+        mimeType,
+        pathFile,
+        creationDate,
+        latitude,
+        longitude
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'Photo';
+  static const String $name = 'Media';
   @override
-  VerificationContext validateIntegrity(Insertable<PhotoData> instance,
+  VerificationContext validateIntegrity(Insertable<MediaData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -467,6 +483,12 @@ class Photo extends Table with TableInfo<Photo, PhotoData> {
           _eTagMeta, eTag.isAcceptableOrUnknown(data['eTag']!, _eTagMeta));
     } else if (isInserting) {
       context.missing(_eTagMeta);
+    }
+    if (data.containsKey('mimeType')) {
+      context.handle(_mimeTypeMeta,
+          mimeType.isAcceptableOrUnknown(data['mimeType']!, _mimeTypeMeta));
+    } else if (isInserting) {
+      context.missing(_mimeTypeMeta);
     }
     if (data.containsKey('pathFile')) {
       context.handle(_pathFileMeta,
@@ -496,15 +518,17 @@ class Photo extends Table with TableInfo<Photo, PhotoData> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  PhotoData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  MediaData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return PhotoData(
+    return MediaData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       serverId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}serverId'])!,
       eTag: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}eTag'])!,
+      mimeType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}mimeType'])!,
       pathFile: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}pathFile'])!,
       creationDate: attachedDatabase.typeMapping
@@ -517,8 +541,8 @@ class Photo extends Table with TableInfo<Photo, PhotoData> {
   }
 
   @override
-  Photo createAlias(String alias) {
-    return Photo(attachedDatabase, alias);
+  Media createAlias(String alias) {
+    return Media(attachedDatabase, alias);
   }
 
   @override
@@ -528,18 +552,20 @@ class Photo extends Table with TableInfo<Photo, PhotoData> {
   bool get dontWriteConstraints => true;
 }
 
-class PhotoData extends DataClass implements Insertable<PhotoData> {
+class MediaData extends DataClass implements Insertable<MediaData> {
   final int id;
   final int serverId;
   final String eTag;
+  final String mimeType;
   final String pathFile;
   final String creationDate;
   final double? latitude;
   final double? longitude;
-  const PhotoData(
+  const MediaData(
       {required this.id,
       required this.serverId,
       required this.eTag,
+      required this.mimeType,
       required this.pathFile,
       required this.creationDate,
       this.latitude,
@@ -550,6 +576,7 @@ class PhotoData extends DataClass implements Insertable<PhotoData> {
     map['id'] = Variable<int>(id);
     map['serverId'] = Variable<int>(serverId);
     map['eTag'] = Variable<String>(eTag);
+    map['mimeType'] = Variable<String>(mimeType);
     map['pathFile'] = Variable<String>(pathFile);
     map['creationDate'] = Variable<String>(creationDate);
     if (!nullToAbsent || latitude != null) {
@@ -561,11 +588,12 @@ class PhotoData extends DataClass implements Insertable<PhotoData> {
     return map;
   }
 
-  PhotoCompanion toCompanion(bool nullToAbsent) {
-    return PhotoCompanion(
+  MediaCompanion toCompanion(bool nullToAbsent) {
+    return MediaCompanion(
       id: Value(id),
       serverId: Value(serverId),
       eTag: Value(eTag),
+      mimeType: Value(mimeType),
       pathFile: Value(pathFile),
       creationDate: Value(creationDate),
       latitude: latitude == null && nullToAbsent
@@ -577,13 +605,14 @@ class PhotoData extends DataClass implements Insertable<PhotoData> {
     );
   }
 
-  factory PhotoData.fromJson(Map<String, dynamic> json,
+  factory MediaData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return PhotoData(
+    return MediaData(
       id: serializer.fromJson<int>(json['id']),
       serverId: serializer.fromJson<int>(json['serverId']),
       eTag: serializer.fromJson<String>(json['eTag']),
+      mimeType: serializer.fromJson<String>(json['mimeType']),
       pathFile: serializer.fromJson<String>(json['pathFile']),
       creationDate: serializer.fromJson<String>(json['creationDate']),
       latitude: serializer.fromJson<double?>(json['latitude']),
@@ -597,6 +626,7 @@ class PhotoData extends DataClass implements Insertable<PhotoData> {
       'id': serializer.toJson<int>(id),
       'serverId': serializer.toJson<int>(serverId),
       'eTag': serializer.toJson<String>(eTag),
+      'mimeType': serializer.toJson<String>(mimeType),
       'pathFile': serializer.toJson<String>(pathFile),
       'creationDate': serializer.toJson<String>(creationDate),
       'latitude': serializer.toJson<double?>(latitude),
@@ -604,28 +634,31 @@ class PhotoData extends DataClass implements Insertable<PhotoData> {
     };
   }
 
-  PhotoData copyWith(
+  MediaData copyWith(
           {int? id,
           int? serverId,
           String? eTag,
+          String? mimeType,
           String? pathFile,
           String? creationDate,
           Value<double?> latitude = const Value.absent(),
           Value<double?> longitude = const Value.absent()}) =>
-      PhotoData(
+      MediaData(
         id: id ?? this.id,
         serverId: serverId ?? this.serverId,
         eTag: eTag ?? this.eTag,
+        mimeType: mimeType ?? this.mimeType,
         pathFile: pathFile ?? this.pathFile,
         creationDate: creationDate ?? this.creationDate,
         latitude: latitude.present ? latitude.value : this.latitude,
         longitude: longitude.present ? longitude.value : this.longitude,
       );
-  PhotoData copyWithCompanion(PhotoCompanion data) {
-    return PhotoData(
+  MediaData copyWithCompanion(MediaCompanion data) {
+    return MediaData(
       id: data.id.present ? data.id.value : this.id,
       serverId: data.serverId.present ? data.serverId.value : this.serverId,
       eTag: data.eTag.present ? data.eTag.value : this.eTag,
+      mimeType: data.mimeType.present ? data.mimeType.value : this.mimeType,
       pathFile: data.pathFile.present ? data.pathFile.value : this.pathFile,
       creationDate: data.creationDate.present
           ? data.creationDate.value
@@ -637,10 +670,11 @@ class PhotoData extends DataClass implements Insertable<PhotoData> {
 
   @override
   String toString() {
-    return (StringBuffer('PhotoData(')
+    return (StringBuffer('MediaData(')
           ..write('id: $id, ')
           ..write('serverId: $serverId, ')
           ..write('eTag: $eTag, ')
+          ..write('mimeType: $mimeType, ')
           ..write('pathFile: $pathFile, ')
           ..write('creationDate: $creationDate, ')
           ..write('latitude: $latitude, ')
@@ -650,54 +684,60 @@ class PhotoData extends DataClass implements Insertable<PhotoData> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, serverId, eTag, pathFile, creationDate, latitude, longitude);
+  int get hashCode => Object.hash(id, serverId, eTag, mimeType, pathFile,
+      creationDate, latitude, longitude);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is PhotoData &&
+      (other is MediaData &&
           other.id == this.id &&
           other.serverId == this.serverId &&
           other.eTag == this.eTag &&
+          other.mimeType == this.mimeType &&
           other.pathFile == this.pathFile &&
           other.creationDate == this.creationDate &&
           other.latitude == this.latitude &&
           other.longitude == this.longitude);
 }
 
-class PhotoCompanion extends UpdateCompanion<PhotoData> {
+class MediaCompanion extends UpdateCompanion<MediaData> {
   final Value<int> id;
   final Value<int> serverId;
   final Value<String> eTag;
+  final Value<String> mimeType;
   final Value<String> pathFile;
   final Value<String> creationDate;
   final Value<double?> latitude;
   final Value<double?> longitude;
-  const PhotoCompanion({
+  const MediaCompanion({
     this.id = const Value.absent(),
     this.serverId = const Value.absent(),
     this.eTag = const Value.absent(),
+    this.mimeType = const Value.absent(),
     this.pathFile = const Value.absent(),
     this.creationDate = const Value.absent(),
     this.latitude = const Value.absent(),
     this.longitude = const Value.absent(),
   });
-  PhotoCompanion.insert({
+  MediaCompanion.insert({
     this.id = const Value.absent(),
     required int serverId,
     required String eTag,
+    required String mimeType,
     required String pathFile,
     required String creationDate,
     this.latitude = const Value.absent(),
     this.longitude = const Value.absent(),
   })  : serverId = Value(serverId),
         eTag = Value(eTag),
+        mimeType = Value(mimeType),
         pathFile = Value(pathFile),
         creationDate = Value(creationDate);
-  static Insertable<PhotoData> custom({
+  static Insertable<MediaData> custom({
     Expression<int>? id,
     Expression<int>? serverId,
     Expression<String>? eTag,
+    Expression<String>? mimeType,
     Expression<String>? pathFile,
     Expression<String>? creationDate,
     Expression<double>? latitude,
@@ -707,6 +747,7 @@ class PhotoCompanion extends UpdateCompanion<PhotoData> {
       if (id != null) 'id': id,
       if (serverId != null) 'serverId': serverId,
       if (eTag != null) 'eTag': eTag,
+      if (mimeType != null) 'mimeType': mimeType,
       if (pathFile != null) 'pathFile': pathFile,
       if (creationDate != null) 'creationDate': creationDate,
       if (latitude != null) 'latitude': latitude,
@@ -714,18 +755,20 @@ class PhotoCompanion extends UpdateCompanion<PhotoData> {
     });
   }
 
-  PhotoCompanion copyWith(
+  MediaCompanion copyWith(
       {Value<int>? id,
       Value<int>? serverId,
       Value<String>? eTag,
+      Value<String>? mimeType,
       Value<String>? pathFile,
       Value<String>? creationDate,
       Value<double?>? latitude,
       Value<double?>? longitude}) {
-    return PhotoCompanion(
+    return MediaCompanion(
       id: id ?? this.id,
       serverId: serverId ?? this.serverId,
       eTag: eTag ?? this.eTag,
+      mimeType: mimeType ?? this.mimeType,
       pathFile: pathFile ?? this.pathFile,
       creationDate: creationDate ?? this.creationDate,
       latitude: latitude ?? this.latitude,
@@ -745,6 +788,9 @@ class PhotoCompanion extends UpdateCompanion<PhotoData> {
     if (eTag.present) {
       map['eTag'] = Variable<String>(eTag.value);
     }
+    if (mimeType.present) {
+      map['mimeType'] = Variable<String>(mimeType.value);
+    }
     if (pathFile.present) {
       map['pathFile'] = Variable<String>(pathFile.value);
     }
@@ -762,10 +808,11 @@ class PhotoCompanion extends UpdateCompanion<PhotoData> {
 
   @override
   String toString() {
-    return (StringBuffer('PhotoCompanion(')
+    return (StringBuffer('MediaCompanion(')
           ..write('id: $id, ')
           ..write('serverId: $serverId, ')
           ..write('eTag: $eTag, ')
+          ..write('mimeType: $mimeType, ')
           ..write('pathFile: $pathFile, ')
           ..write('creationDate: $creationDate, ')
           ..write('latitude: $latitude, ')
@@ -779,12 +826,29 @@ abstract class _$AppDb extends GeneratedDatabase {
   _$AppDb(QueryExecutor e) : super(e);
   $AppDbManager get managers => $AppDbManager(this);
   late final Server server = Server(this);
-  late final Photo photo = Photo(this);
+  late final Media media = Media(this);
+  Future<int> insertMediaOnConflictUpdateEtag(int var1, String var2,
+      String var3, String var4, String var5, double? var6, double? var7) {
+    return customInsert(
+      'INSERT INTO Media (serverId, eTag, mimeType, pathFile, creationDate, latitude, longitude) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) ON CONFLICT (eTag) DO UPDATE SET serverId = excluded.serverId, eTag = excluded.eTag, mimeType = excluded.mimeType, pathFile = excluded.pathFile, creationDate = excluded.creationDate, latitude = excluded.latitude, longitude = excluded.longitude',
+      variables: [
+        Variable<int>(var1),
+        Variable<String>(var2),
+        Variable<String>(var3),
+        Variable<String>(var4),
+        Variable<String>(var5),
+        Variable<double>(var6),
+        Variable<double>(var7)
+      ],
+      updates: {media},
+    );
+  }
+
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [server, photo];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [server, media];
 }
 
 typedef $ServerCreateCompanionBuilder = ServerCompanion Function({
@@ -953,27 +1017,29 @@ typedef $ServerProcessedTableManager = ProcessedTableManager<
     (ServerData, BaseReferences<_$AppDb, Server, ServerData>),
     ServerData,
     PrefetchHooks Function()>;
-typedef $PhotoCreateCompanionBuilder = PhotoCompanion Function({
+typedef $MediaCreateCompanionBuilder = MediaCompanion Function({
   Value<int> id,
   required int serverId,
   required String eTag,
+  required String mimeType,
   required String pathFile,
   required String creationDate,
   Value<double?> latitude,
   Value<double?> longitude,
 });
-typedef $PhotoUpdateCompanionBuilder = PhotoCompanion Function({
+typedef $MediaUpdateCompanionBuilder = MediaCompanion Function({
   Value<int> id,
   Value<int> serverId,
   Value<String> eTag,
+  Value<String> mimeType,
   Value<String> pathFile,
   Value<String> creationDate,
   Value<double?> latitude,
   Value<double?> longitude,
 });
 
-class $PhotoFilterComposer extends FilterComposer<_$AppDb, Photo> {
-  $PhotoFilterComposer(super.$state);
+class $MediaFilterComposer extends FilterComposer<_$AppDb, Media> {
+  $MediaFilterComposer(super.$state);
   ColumnFilters<int> get id => $state.composableBuilder(
       column: $state.table.id,
       builder: (column, joinBuilders) =>
@@ -986,6 +1052,11 @@ class $PhotoFilterComposer extends FilterComposer<_$AppDb, Photo> {
 
   ColumnFilters<String> get eTag => $state.composableBuilder(
       column: $state.table.eTag,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get mimeType => $state.composableBuilder(
+      column: $state.table.mimeType,
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
 
@@ -1010,8 +1081,8 @@ class $PhotoFilterComposer extends FilterComposer<_$AppDb, Photo> {
           ColumnFilters(column, joinBuilders: joinBuilders));
 }
 
-class $PhotoOrderingComposer extends OrderingComposer<_$AppDb, Photo> {
-  $PhotoOrderingComposer(super.$state);
+class $MediaOrderingComposer extends OrderingComposer<_$AppDb, Media> {
+  $MediaOrderingComposer(super.$state);
   ColumnOrderings<int> get id => $state.composableBuilder(
       column: $state.table.id,
       builder: (column, joinBuilders) =>
@@ -1024,6 +1095,11 @@ class $PhotoOrderingComposer extends OrderingComposer<_$AppDb, Photo> {
 
   ColumnOrderings<String> get eTag => $state.composableBuilder(
       column: $state.table.eTag,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get mimeType => $state.composableBuilder(
+      column: $state.table.mimeType,
       builder: (column, joinBuilders) =>
           ColumnOrderings(column, joinBuilders: joinBuilders));
 
@@ -1048,36 +1124,38 @@ class $PhotoOrderingComposer extends OrderingComposer<_$AppDb, Photo> {
           ColumnOrderings(column, joinBuilders: joinBuilders));
 }
 
-class $PhotoTableManager extends RootTableManager<
+class $MediaTableManager extends RootTableManager<
     _$AppDb,
-    Photo,
-    PhotoData,
-    $PhotoFilterComposer,
-    $PhotoOrderingComposer,
-    $PhotoCreateCompanionBuilder,
-    $PhotoUpdateCompanionBuilder,
-    (PhotoData, BaseReferences<_$AppDb, Photo, PhotoData>),
-    PhotoData,
+    Media,
+    MediaData,
+    $MediaFilterComposer,
+    $MediaOrderingComposer,
+    $MediaCreateCompanionBuilder,
+    $MediaUpdateCompanionBuilder,
+    (MediaData, BaseReferences<_$AppDb, Media, MediaData>),
+    MediaData,
     PrefetchHooks Function()> {
-  $PhotoTableManager(_$AppDb db, Photo table)
+  $MediaTableManager(_$AppDb db, Media table)
       : super(TableManagerState(
           db: db,
           table: table,
-          filteringComposer: $PhotoFilterComposer(ComposerState(db, table)),
-          orderingComposer: $PhotoOrderingComposer(ComposerState(db, table)),
+          filteringComposer: $MediaFilterComposer(ComposerState(db, table)),
+          orderingComposer: $MediaOrderingComposer(ComposerState(db, table)),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<int> serverId = const Value.absent(),
             Value<String> eTag = const Value.absent(),
+            Value<String> mimeType = const Value.absent(),
             Value<String> pathFile = const Value.absent(),
             Value<String> creationDate = const Value.absent(),
             Value<double?> latitude = const Value.absent(),
             Value<double?> longitude = const Value.absent(),
           }) =>
-              PhotoCompanion(
+              MediaCompanion(
             id: id,
             serverId: serverId,
             eTag: eTag,
+            mimeType: mimeType,
             pathFile: pathFile,
             creationDate: creationDate,
             latitude: latitude,
@@ -1087,15 +1165,17 @@ class $PhotoTableManager extends RootTableManager<
             Value<int> id = const Value.absent(),
             required int serverId,
             required String eTag,
+            required String mimeType,
             required String pathFile,
             required String creationDate,
             Value<double?> latitude = const Value.absent(),
             Value<double?> longitude = const Value.absent(),
           }) =>
-              PhotoCompanion.insert(
+              MediaCompanion.insert(
             id: id,
             serverId: serverId,
             eTag: eTag,
+            mimeType: mimeType,
             pathFile: pathFile,
             creationDate: creationDate,
             latitude: latitude,
@@ -1108,21 +1188,21 @@ class $PhotoTableManager extends RootTableManager<
         ));
 }
 
-typedef $PhotoProcessedTableManager = ProcessedTableManager<
+typedef $MediaProcessedTableManager = ProcessedTableManager<
     _$AppDb,
-    Photo,
-    PhotoData,
-    $PhotoFilterComposer,
-    $PhotoOrderingComposer,
-    $PhotoCreateCompanionBuilder,
-    $PhotoUpdateCompanionBuilder,
-    (PhotoData, BaseReferences<_$AppDb, Photo, PhotoData>),
-    PhotoData,
+    Media,
+    MediaData,
+    $MediaFilterComposer,
+    $MediaOrderingComposer,
+    $MediaCreateCompanionBuilder,
+    $MediaUpdateCompanionBuilder,
+    (MediaData, BaseReferences<_$AppDb, Media, MediaData>),
+    MediaData,
     PrefetchHooks Function()>;
 
 class $AppDbManager {
   final _$AppDb _db;
   $AppDbManager(this._db);
   $ServerTableManager get server => $ServerTableManager(_db, _db.server);
-  $PhotoTableManager get photo => $PhotoTableManager(_db, _db.photo);
+  $MediaTableManager get media => $MediaTableManager(_db, _db.media);
 }
