@@ -35,13 +35,22 @@ class _CarouselState extends State<Carousel> {
     indexFile = files.indexWhere((element) => element.eTag == widget.eTag);
     _pageController =
         PageController(viewportFraction: 1, initialPage: indexFile);
+    double previousPage = _pageController.page ?? 0.0;
+    String scrollDirection = '';
 
     _pageController.addListener(() {
       if (!mounted) {
         return;
       }
 
-      final int futureIndexFile = _pageController.page!.ceil();
+      double currentPage = _pageController.page ?? 0.0;
+      setState(() {
+        scrollDirection = currentPage > previousPage ? 'right' : 'left';
+      });
+      previousPage = currentPage;
+
+      final int futureIndexFile =
+          scrollDirection == 'right' ? currentPage.ceil() : currentPage.floor();
 
       if (futureIndexFile != indexFile) {
         setState(() {
@@ -59,9 +68,11 @@ class _CarouselState extends State<Carousel> {
     compressedImage =
         await Thumbnail.readThumbnail(files[indexFile].eTag ?? '');
 
-    if (mounted) {
-      setState(() {});
+    if (!mounted) {
+      return;
     }
+
+    setState(() {});
   }
 
   @override
