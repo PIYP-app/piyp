@@ -31,8 +31,8 @@ final appRouter = GoRouter(
           )
         ]),
     GoRoute(
-        name: 'Photo',
-        path: '/photos/:eTag',
+        name: 'Image',
+        path: '/images/:eTag',
         builder: (context, state) => Carousel(
               eTag: state.pathParameters['eTag'],
             )),

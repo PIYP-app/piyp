@@ -86,7 +86,7 @@ class _ImageCardState extends State<ImageCard> {
     }
 
     final mediaType =
-        widget.file.mimeType.value.contains('video') ? 'videos' : 'photos';
+        widget.file.mimeType.value.contains('video') ? 'videos' : 'images';
 
     return InkWell(
         onTap: () {

@@ -66,7 +66,7 @@ class Sources {
     return files;
   }
 
-  static MediaCompanion photoDataToMediaCompanion(MediaData file) {
+  static MediaCompanion mediaDataToMediaCompanion(MediaData file) {
     final fileCompanion = MediaCompanion.insert(
       serverId: file.serverId,
       eTag: file.eTag,
