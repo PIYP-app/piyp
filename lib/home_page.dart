@@ -37,9 +37,8 @@ class _HomePageState extends State<HomePage> {
 
     List<MediaData> dbMedias = await database.select(database.media).get();
 
-    List<MediaCompanion> dbMediasCompanion = dbMedias
-        .map((media) => Sources.mediaDataToMediaCompanion(media))
-        .toList();
+    List<MediaCompanion> dbMediasCompanion =
+        dbMedias.map((media) => media.toCompanion(false)).toList();
 
     dbMediasCompanion.sort((a, b) => DateTime.parse(b.creationDate.value)
         .compareTo(DateTime.parse(a.creationDate.value)));
@@ -51,9 +50,8 @@ class _HomePageState extends State<HomePage> {
     await sources.retrieveAllFiles();
     final sourcesMedias = sources.getAllFiles();
 
-    List<MediaCompanion> sourcesMediasCompanion = sourcesMedias
-        .map((media) => Sources.sourceFileToMediaCompanion(media))
-        .toList();
+    List<MediaCompanion> sourcesMediasCompanion =
+        sourcesMedias.map((media) => media.toCompanion()).toList();
 
     sourcesMediasCompanion.removeWhere((media) =>
         dbMediasCompanion.indexWhere((dbMedia) => dbMedia.eTag == media.eTag) !=

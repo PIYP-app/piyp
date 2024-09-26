@@ -1,3 +1,5 @@
+import 'package:piyp/database/database.dart';
+
 class SourceFile {
   Source server;
   String? path;
@@ -8,6 +10,18 @@ class SourceFile {
   String? eTag;
   DateTime? cTime;
   DateTime? mTime;
+
+  MediaCompanion toCompanion() {
+    final fileCompanion = MediaCompanion.insert(
+      serverId: server.id,
+      eTag: eTag!,
+      mimeType: mimeType!,
+      pathFile: path!,
+      creationDate: mTime!.toIso8601String(),
+    );
+
+    return fileCompanion;
+  }
 
   SourceFile({
     required this.server,

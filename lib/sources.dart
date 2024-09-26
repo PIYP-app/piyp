@@ -66,30 +66,6 @@ class Sources {
     return files;
   }
 
-  static MediaCompanion mediaDataToMediaCompanion(MediaData file) {
-    final fileCompanion = MediaCompanion.insert(
-      serverId: file.serverId,
-      eTag: file.eTag,
-      mimeType: file.mimeType,
-      pathFile: file.pathFile,
-      creationDate: file.creationDate,
-    );
-
-    return fileCompanion;
-  }
-
-  static MediaCompanion sourceFileToMediaCompanion(SourceFile file) {
-    final fileCompanion = MediaCompanion.insert(
-      serverId: file.server.id,
-      eTag: file.eTag!,
-      mimeType: file.mimeType!,
-      pathFile: file.path!,
-      creationDate: file.mTime!.toIso8601String(),
-    );
-
-    return fileCompanion;
-  }
-
   static Future<MediaCompanion> readExifFromFile(SourceFile file) async {
     final List<int> fileData = await file.server.read(file.path!);
     final Map<String, IfdTag> value = await readExifFromBytes(fileData);
