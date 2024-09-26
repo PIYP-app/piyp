@@ -47,7 +47,7 @@ class _ImageCardState extends State<ImageCard> {
       return;
     }
 
-    final newMedia = await Sources.readExifFromFile(media!);
+    final newMedia = await media!.readExifFromFile();
 
     await Sources.saveMediaInDatabase(newMedia);
   }
@@ -72,9 +72,11 @@ class _ImageCardState extends State<ImageCard> {
       }
     }
 
-    if (mounted) {
-      setState(() {});
+    if (!mounted) {
+      return;
     }
+
+    setState(() {});
   }
 
   @override
