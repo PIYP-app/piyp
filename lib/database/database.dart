@@ -31,3 +31,12 @@ LazyDatabase _openConnection() {
     return NativeDatabase.createInBackground(file);
   });
 }
+
+// @UseRowClass(Media)
+// class Medias extends Media {
+//   Medias(super.attachedDatabase);
+
+//   MediaCompanion mediaDataToMediaCompanion() {
+//     return this.toCompanion(false);
+//   }
+// }

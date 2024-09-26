@@ -67,15 +67,7 @@ class Sources {
   }
 
   static MediaCompanion mediaDataToMediaCompanion(MediaData file) {
-    final fileCompanion = MediaCompanion.insert(
-      serverId: file.serverId,
-      eTag: file.eTag,
-      mimeType: file.mimeType,
-      pathFile: file.pathFile,
-      creationDate: file.creationDate,
-    );
-
-    return fileCompanion;
+    return file.toCompanion(false);
   }
 
   static MediaCompanion sourceFileToMediaCompanion(SourceFile file) {
