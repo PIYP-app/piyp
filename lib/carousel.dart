@@ -35,7 +35,7 @@ class _CarouselState extends State<Carousel> {
     indexFile = files.indexWhere((element) => element.eTag == widget.eTag);
     _pageController =
         PageController(viewportFraction: 1, initialPage: indexFile);
-    double previousPage = _pageController.page ?? 0.0;
+    double previousPage = _pageController.initialPage.toDouble();
     String scrollDirection = '';
 
     _pageController.addListener(() {
