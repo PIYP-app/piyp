@@ -1,160 +1,179 @@
-import 'package:drift/drift.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:drift/drift.dart' as drift;
 import 'package:piyp/database/database.dart';
 import 'package:piyp/enum.dart';
 import 'package:piyp/init_db.dart';
-import 'package:piyp/sources.dart';
+import 'package:go_router/go_router.dart';
 
-class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+class NewSettingsPage extends StatefulWidget {
+  const NewSettingsPage({super.key});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  _NewSettingsPageState createState() => _NewSettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
-  final TextEditingController titleInputController = TextEditingController();
-  final TextEditingController uriInputController = TextEditingController();
-  final TextEditingController usernameInputController = TextEditingController();
-  final TextEditingController passwordInputController = TextEditingController();
-  final TextEditingController folderPathInputController =
-      TextEditingController();
+class _NewSettingsPageState extends State<NewSettingsPage> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _urlController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _folderPathController = TextEditingController();
   List<ServerData> servers = [];
-  Sources sources = Sources();
 
   @override
   void initState() {
     super.initState();
-    retrieveServerFromDb();
+    _loadServers();
   }
 
-  retrieveServerFromDb() async {
-    List<ServerData> retrieveServers =
-        await database.select(database.server).get();
-
-    if (!mounted || retrieveServers.isEmpty) {
-      return;
+  void _loadServers() async {
+    final loadedServers = await database.select(database.server).get();
+    if (mounted) {
+      setState(() {
+        servers = loadedServers;
+      });
     }
-
-    setState(() {
-      servers = retrieveServers;
-    });
   }
 
-  // updateSettingsInDb() async {
-  //   await database.server.insertOne(
-  //       ServerCompanion(
-  //         id: Value(servers[0].id),
-  //         title: Value(titleInputController.text),
-  //         serverType: Value(ServerType.webdav.value),
-  //         uri: Value(uriInputController.text),
-  //         username: Value(usernameInputController.text),
-  //         pwd: Value(passwordInputController.text),
-  //         folderPath: Value(folderPathInputController.text),
-  //       ),
-  //       mode: InsertMode.insertOrReplace);
-
-  //   List<ServerData> ttt = await database.select(database.server).get();
-
-  //   print(ttt);
-  // }
-
-  addNewServer() async {
-    await database.server.insertOne(
+  Future<void> _addServer() async {
+    if (_formKey.currentState!.validate()) {
+      await database.server.insertOne(
         ServerCompanion(
-          title: Value(titleInputController.text),
-          serverType: Value(ServerType.webdav.value),
-          uri: Value(uriInputController.text),
-          username: Value(usernameInputController.text),
-          pwd: Value(passwordInputController.text),
-          folderPath: Value(folderPathInputController.text),
+          title: drift.Value(_nameController.text),
+          serverType: drift.Value(ServerType.webdav.value),
+          uri: drift.Value(_urlController.text),
+          username: drift.Value(_usernameController.text),
+          pwd: drift.Value(_passwordController.text),
+          folderPath: drift.Value(_folderPathController.text),
         ),
-        mode: InsertMode.insertOrReplace);
-
-    List<ServerData> retrieveServers =
-        await database.select(database.server).get();
-
-    setState(() {
-      servers = retrieveServers;
-      titleInputController.text = '';
-      usernameInputController.text = '';
-      passwordInputController.text = '';
-      folderPathInputController.text = '';
-    });
+        mode: drift.InsertMode.insertOrReplace,
+      );
+      _loadServers();
+      _clearForm();
+    }
   }
 
-  removeServerFromDb(ServerData server) async {
+  void _clearForm() {
+    _nameController.clear();
+    _urlController.clear();
+    _usernameController.clear();
+    _passwordController.clear();
+    _folderPathController.clear();
+  }
+
+  Future<void> _removeServer(ServerData server) async {
     await database.server.deleteOne(server);
-
-    setState(() {
-      servers.remove(server);
-    });
-
-    List<ServerData> ttt = await database.select(database.server).get();
-
-    print(ttt);
+    _loadServers();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          toolbarHeight: 0,
-        ),
-        body: ListView(children: [
-          servers.isNotEmpty
-              ? CupertinoFormSection(
-                  header: const Text('WebDAV servers'),
-                  children: servers
-                      .map((server) => Dismissible(
-                          key: Key(server.hashCode.toString()),
-                          background: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            color: Colors.red,
-                            child: const Icon(
-                              Icons.delete,
-                              color: Colors.white,
-                            ),
-                          ),
-                          onDismissed: (direction) {
-                            removeServerFromDb(server);
-                          },
-                          child: CupertinoListTile(
-                            title: Text(server.title),
-                            // leading: const Icon(Icons.warning),
-                          )))
-                      .toList(),
-                )
-              : const SizedBox(),
-          CupertinoFormSection(
-            header: const Text('Add a webDAV server'),
-            children: [
-              CupertinoTextFormFieldRow(
-                prefix: const Text('Title'),
-                controller: titleInputController,
-              ),
-              CupertinoTextFormFieldRow(
-                prefix: const Text('URL'),
-                controller: uriInputController,
-              ),
-              CupertinoTextFormFieldRow(
-                  controller: usernameInputController,
-                  prefix: const Text('Username')),
-              CupertinoTextFormFieldRow(
-                  prefix: const Text('Password'),
-                  controller: passwordInputController),
-              CupertinoTextFormFieldRow(
-                prefix: const Text('Folder path'),
-                controller: folderPathInputController,
-              ),
-              CupertinoButton.filled(
-                  onPressed: addNewServer, child: const Text('Submit'))
-            ],
-          )
-        ]));
+      appBar: AppBar(
+        title: const Text('WebDAV Server Settings'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'Server Name'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a server name';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _urlController,
+                  decoration: const InputDecoration(labelText: 'Server URL'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a server URL';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(labelText: 'Username'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a username';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a password';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _folderPathController,
+                  decoration: const InputDecoration(labelText: 'Folder Path'),
+                ),
+                const SizedBox(height: 16),
+                CupertinoButton.filled(
+                  onPressed: _addServer,
+                  child: const Text('Add Server'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            'Saved Servers',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: servers.length,
+            itemBuilder: (context, index) {
+              final server = servers[index];
+
+              return Dismissible(
+                key: Key(server.id.toString()),
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 16),
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                direction: DismissDirection.endToStart,
+                onDismissed: (direction) {
+                  _removeServer(server);
+                },
+                child: ListTile(
+                  title: Text(server.title),
+                  subtitle: Text(server.uri),
+                  onTap: () {
+                    context
+                        .push('/settings/edit/${server.id}')
+                        .then((_) => mounted ? _loadServers() : null);
+                  },
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 }

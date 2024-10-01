@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:piyp/bottom_bar.dart';
 import 'package:piyp/carousel.dart';
 import 'package:piyp/home_page.dart';
+import 'package:piyp/settings/edit_server.dart';
 import 'package:piyp/settings_page.dart';
 import 'package:piyp/video_page.dart';
 
@@ -27,7 +28,7 @@ final appRouter = GoRouter(
           GoRoute(
             name: 'Settings',
             path: '/settings',
-            builder: (context, state) => const SettingsPage(),
+            builder: (context, state) => const NewSettingsPage(),
           )
         ]),
     GoRoute(
@@ -41,6 +42,12 @@ final appRouter = GoRouter(
         path: '/videos/:eTag',
         builder: (context, state) => VideoPage(
               eTag: state.pathParameters['eTag'],
-            ))
+            )),
+    GoRoute(
+        name: 'EditServer',
+        path: '/settings/edit/:id',
+        builder: (context, state) => EditServerPage(
+              serverId: int.parse(state.pathParameters['id'] ?? '0'),
+            )),
   ],
 );
