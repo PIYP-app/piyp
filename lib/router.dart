@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:piyp/bottom_bar.dart';
 import 'package:piyp/carousel.dart';
 import 'package:piyp/home_page.dart';
+import 'package:piyp/maps.dart';
 import 'package:piyp/settings/edit_server.dart';
 import 'package:piyp/settings_page.dart';
 import 'package:piyp/video_page.dart';
@@ -26,10 +27,15 @@ final appRouter = GoRouter(
             builder: (context, state) => const HomePage(),
           ),
           GoRoute(
+            name: 'Map',
+            path: '/map',
+            builder: (context, state) => const MapPage(),
+          ),
+          GoRoute(
             name: 'Settings',
             path: '/settings',
             builder: (context, state) => const NewSettingsPage(),
-          )
+          ),
         ]),
     GoRoute(
         name: 'Image',

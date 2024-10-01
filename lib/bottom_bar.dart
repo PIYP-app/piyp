@@ -10,8 +10,11 @@ class BottomBar extends StatelessWidget {
     if (uri == '/') {
       return 0;
     }
-    if (uri == '/settings') {
+    if (uri == '/map') {
       return 1;
+    }
+    if (uri == '/settings') {
+      return 2;
     }
     return -1;
   }
@@ -26,9 +29,13 @@ class BottomBar extends StatelessWidget {
             label: 'Library',
           ),
           BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.map),
+            label: 'Map',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.settings),
             label: 'Settings',
-          )
+          ),
         ],
         onTap: (index) {
           var currentIndex = retrieveUriIndex(uri);
@@ -39,6 +46,9 @@ class BottomBar extends StatelessWidget {
               context.push('/');
               break;
             case 1:
+              context.push('/map');
+              break;
+            case 2:
               context.push('/settings');
               break;
           }
