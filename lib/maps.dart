@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:piyp/database/database.dart';
 import 'package:piyp/init_db.dart';
+import 'package:piyp/maps/media_marker.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -9,15 +11,22 @@ class MapPage extends StatefulWidget {
   _MapPageState createState() => _MapPageState();
 }
 
+class MediaWithGeoPoint {
+  final MediaData media;
+  final GeoPoint geoPoint;
+
+  MediaWithGeoPoint({required this.media, required this.geoPoint});
+}
+
 class _MapPageState extends State<MapPage> {
   late MapController _mapController;
-  List<GeoPoint> _imageLocations = [];
+  List<MediaWithGeoPoint> _imageLocations = [];
+  bool mapIsDisposed = false;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController.withUserPosition();
-    _loadImageLocations();
   }
 
   Future<void> _loadImageLocations() async {
@@ -25,10 +34,12 @@ class _MapPageState extends State<MapPage> {
     setState(() {
       _imageLocations = medias
           .where((img) => img.latitude != null && img.longitude != null)
-          .map((img) => GeoPoint(
+          .map((img) => MediaWithGeoPoint(
+              media: img,
+              geoPoint: GeoPoint(
                 latitude: img.latitude!,
                 longitude: img.longitude!,
-              ))
+              )))
           .toList();
     });
     _addMarkers();
@@ -36,16 +47,17 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _addMarkers() async {
     for (final location in _imageLocations) {
-      await _mapController.addMarker(
-        location,
-        markerIcon: const MarkerIcon(
-          icon: Icon(
-            Icons.photo,
-            color: Colors.white,
-            size: 48,
-          ),
-        ),
-      );
+      if (mapIsDisposed) {
+        return;
+      }
+      try {
+        await _mapController.addMarker(location.geoPoint,
+            markerIcon: MarkerIcon(
+              iconWidget: MediaMarker(eTag: location.media.eTag),
+            ));
+      } catch (e) {
+        print(e);
+      }
     }
     if (_imageLocations.isNotEmpty) {
       await _mapController.setZoom(zoomLevel: 10);
@@ -60,6 +72,11 @@ class _MapPageState extends State<MapPage> {
       ),
       body: OSMFlutter(
           controller: _mapController,
+          onMapIsReady: (isReady) {
+            if (isReady) {
+              _loadImageLocations();
+            }
+          },
           osmOption: const OSMOption(
             userTrackingOption: UserTrackingOption(
               enableTracking: false,
@@ -78,5 +95,6 @@ class _MapPageState extends State<MapPage> {
   void dispose() {
     _mapController.dispose();
     super.dispose();
+    mapIsDisposed = true;
   }
 }
