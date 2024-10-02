@@ -163,6 +163,9 @@ class _NewSettingsPageState extends State<NewSettingsPage> {
                 child: ListTile(
                   title: Text(server.title),
                   subtitle: Text(server.uri),
+                  onLongPress: () {
+                    context.push('/indexation');
+                  },
                   onTap: () {
                     context
                         .push('/settings/edit/${server.id}')

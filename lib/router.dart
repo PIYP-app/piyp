@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:piyp/bottom_bar.dart';
 import 'package:piyp/carousel.dart';
 import 'package:piyp/home_page.dart';
+import 'package:piyp/indexation.dart';
 import 'package:piyp/maps.dart';
 import 'package:piyp/settings/edit_server.dart';
 import 'package:piyp/settings_page.dart';
@@ -55,5 +56,10 @@ final appRouter = GoRouter(
         builder: (context, state) => EditServerPage(
               serverId: int.parse(state.pathParameters['id'] ?? '0'),
             )),
+    GoRoute(
+      name: 'Indexation',
+      path: '/indexation',
+      builder: (context, state) => const IndexationPage(),
+    )
   ],
 );
