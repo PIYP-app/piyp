@@ -26,7 +26,6 @@ class _ImageCardState extends State<ImageCard> {
   @override
   void initState() {
     super.initState();
-    getOrCreateThumbnail();
 
     final indexMedia = sources.sources
         .firstWhere((source) => source.id == widget.file.serverId.value)
@@ -40,9 +39,10 @@ class _ImageCardState extends State<ImageCard> {
         : null;
 
     getOrCreateMedia();
+    retrieveThumbnail();
   }
 
-  getOrCreateMedia() async {
+  Future<void> getOrCreateMedia() async {
     if (media == null) {
       return;
     }
@@ -52,25 +52,12 @@ class _ImageCardState extends State<ImageCard> {
     await Sources.saveMediaInDatabase(newMedia);
   }
 
-  getOrCreateThumbnail() async {
-    final retrievedThumbnail =
-        await Thumbnail.readThumbnail(widget.file.eTag.value);
-    compressedImage = retrievedThumbnail != null
-        ? await retrievedThumbnail.readAsBytes()
-        : null;
-    if (compressedImage == null && media != null) {
-      if (media!.mimeType!.contains('video')) {
-        compressedImage = await Thumbnail.generateVideoThumbnail(media!);
-      } else {
-        try {
-          List<int> fileByte = await media!.server.read(media!.path!);
-          compressedImage = await Thumbnail.generatePhotoThumbnail(
-              Uint8List.fromList(fileByte), media!.eTag!);
-        } catch (e) {
-          print('Error generating thumbnail: $e');
-        }
-      }
+  Future<void> retrieveThumbnail() async {
+    if (media == null) {
+      return;
     }
+
+    compressedImage = await Thumbnail.getOrCreateThumbnail(media!);
 
     if (!mounted) {
       return;

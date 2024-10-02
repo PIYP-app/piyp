@@ -79,6 +79,29 @@ class Thumbnail {
     }
   }
 
+  static Future<Uint8List?> getOrCreateThumbnail(SourceFile file) async {
+    Uint8List? compressedImage;
+    final retrievedThumbnail = await Thumbnail.readThumbnail(file.eTag!);
+    compressedImage = retrievedThumbnail != null
+        ? await retrievedThumbnail.readAsBytes()
+        : null;
+    if (compressedImage == null) {
+      if (file.mimeType!.contains('video')) {
+        compressedImage = await Thumbnail.generateVideoThumbnail(file);
+      } else {
+        try {
+          List<int> fileByte = await file.server.read(file.path!);
+          compressedImage = await Thumbnail.generatePhotoThumbnail(
+              Uint8List.fromList(fileByte), file.eTag!);
+        } catch (e) {
+          print('Error generating thumbnail: $e');
+        }
+      }
+    }
+
+    return compressedImage;
+  }
+
   static Future<File?> readThumbnail(String eTag) async {
     final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/thumbnails/$eTag');
