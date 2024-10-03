@@ -79,13 +79,14 @@ class Thumbnail {
     }
   }
 
-  static Future<Uint8List?> getOrCreateThumbnail(SourceFile file) async {
+  static Future<Uint8List?> getOrCreateThumbnail(
+      String eTag, SourceFile? file) async {
     Uint8List? compressedImage;
-    final retrievedThumbnail = await Thumbnail.readThumbnail(file.eTag!);
+    final retrievedThumbnail = await Thumbnail.readThumbnail(eTag);
     compressedImage = retrievedThumbnail != null
         ? await retrievedThumbnail.readAsBytes()
         : null;
-    if (compressedImage == null) {
+    if (compressedImage == null && file != null) {
       if (file.mimeType!.contains('video')) {
         compressedImage = await Thumbnail.generateVideoThumbnail(file);
       } else {

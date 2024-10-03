@@ -53,11 +53,8 @@ class _ImageCardState extends State<ImageCard> {
   }
 
   Future<void> retrieveThumbnail() async {
-    if (media == null) {
-      return;
-    }
-
-    compressedImage = await Thumbnail.getOrCreateThumbnail(media!);
+    compressedImage =
+        await Thumbnail.getOrCreateThumbnail(widget.file.eTag.value, media);
 
     if (!mounted) {
       return;
