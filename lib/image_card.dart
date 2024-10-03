@@ -81,8 +81,7 @@ class _ImageCardState extends State<ImageCard> {
         }, // Handle your callback
         child: PhotoView.customChild(
           heroAttributes: PhotoViewHeroAttributes(
-              tag: widget.file.eTag.value ?? '',
-              transitionOnUserGestures: true),
+              tag: widget.file.eTag.value, transitionOnUserGestures: true),
           child: Container(
               decoration: BoxDecoration(
             image: DecorationImage(

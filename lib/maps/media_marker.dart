@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:piyp/database/database.dart';
 import 'package:piyp/init_db.dart';
 import 'package:piyp/thumbnail.dart';
-import 'package:go_router/go_router.dart';
 
 class MediaWithThumbnail {
   final MediaData media;
@@ -55,28 +54,18 @@ class MediaMarker extends StatelessWidget {
           return const Icon(Icons.error);
         }
 
-        final mediaType = snapshot.data!.media.mimeType.contains('video')
-            ? 'videos'
-            : 'images';
-
-        return GestureDetector(
-          onTap: () {
-            context.push(Uri(path: '/$mediaType/${snapshot.data!.media.eTag}')
-                .toString());
-          },
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: ClipOval(
-              child: Image.file(
-                snapshot.data!.thumbnail,
-                fit: BoxFit.cover,
-              ),
+        return Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+          ),
+          child: ClipOval(
+            child: Image.file(
+              snapshot.data!.thumbnail,
+              fit: BoxFit.cover,
             ),
           ),
         );

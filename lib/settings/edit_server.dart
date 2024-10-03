@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:piyp/database/database.dart';
-import 'package:piyp/enum.dart';
 import 'package:piyp/init_db.dart';
 
 class EditServerPage extends StatefulWidget {

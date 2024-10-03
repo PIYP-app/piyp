@@ -1,8 +1,10 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:piyp/database/database.dart';
 import 'package:piyp/init_db.dart';
 import 'package:piyp/maps/media_marker.dart';
+import 'package:go_router/go_router.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -59,9 +61,14 @@ class _MapPageState extends State<MapPage> {
         print(e);
       }
     }
-    if (_imageLocations.isNotEmpty) {
-      await _mapController.setZoom(zoomLevel: 10);
-    }
+  }
+
+  MediaWithGeoPoint? _findImageLocationFromGeoPoint(GeoPoint geoPoint) {
+    return _imageLocations.firstWhereOrNull(
+      (location) =>
+          location.geoPoint.latitude == geoPoint.latitude &&
+          location.geoPoint.longitude == geoPoint.longitude,
+    );
   }
 
   @override
@@ -73,8 +80,18 @@ class _MapPageState extends State<MapPage> {
       body: OSMFlutter(
           controller: _mapController,
           onMapIsReady: (isReady) {
-            if (isReady) {
-              _loadImageLocations();
+            _loadImageLocations();
+          },
+          onGeoPointClicked: (geoPoint) {
+            final retrievedMedia = _findImageLocationFromGeoPoint(geoPoint);
+
+            if (retrievedMedia != null) {
+              final mediaType = retrievedMedia.media.mimeType.contains('video')
+                  ? 'videos'
+                  : 'images';
+
+              context.push(Uri(path: '/$mediaType/${retrievedMedia.media.eTag}')
+                  .toString());
             }
           },
           osmOption: const OSMOption(
