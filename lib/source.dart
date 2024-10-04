@@ -14,12 +14,15 @@ class SourceFile {
   String? eTag;
   DateTime? cTime;
   DateTime? mTime;
+  List<int>? fileData;
 
   MediaCompanion toCompanion() {
     final fileCompanion = MediaCompanion.insert(
       serverId: server.id,
       eTag: eTag!,
-      mimeType: mimeType!,
+      mimeType: mimeType!.contains('image')
+          ? MediaMimeType.image.value
+          : MediaMimeType.video.value,
       pathFile: path!,
       creationDate: mTime!.toIso8601String(),
     );
@@ -28,8 +31,9 @@ class SourceFile {
   }
 
   Future<MediaCompanion> readExifFromFile() async {
-    final List<int> fileData = await server.read(path!);
-    final Map<String, IfdTag> value = await readExifFromBytes(fileData);
+    fileData ??= await server.read(path!);
+    final Map<String, IfdTag> value = await readExifFromBytes(fileData!);
+
     final test = ImageExif(
       make: value['Image Make']?.printable ?? '',
       model: value['Image Model']?.printable,

@@ -29,10 +29,11 @@ class _IndexationPageState extends State<IndexationPage> {
         _totalFiles = files.length;
       });
 
-      for (var i = 0; i < files.length; i += 10) {
-        final batch = files.skip(i).take(10);
+      for (var i = 0; i < files.length; i += 50) {
+        final batch = files.skip(i).take(50);
         await Future.wait(batch.map((file) async {
-          await Thumbnail.getOrCreateThumbnail(file.eTag!, file);
+          file.fileData = await file.server.read(file.path!);
+          Thumbnail.getOrCreateThumbnail(file.eTag!, file);
           final newMedia = await file.readExifFromFile();
 
           await Sources.saveMediaInDatabase(newMedia);

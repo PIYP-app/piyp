@@ -91,9 +91,10 @@ class Thumbnail {
         compressedImage = await Thumbnail.generateVideoThumbnail(file);
       } else {
         try {
-          List<int> fileByte = await file.server.read(file.path!);
+          file.fileData ??= await file.server.read(file.path!);
+
           compressedImage = await Thumbnail.generatePhotoThumbnail(
-              Uint8List.fromList(fileByte), file.eTag!);
+              Uint8List.fromList(file.fileData!), file.eTag!);
         } catch (e) {
           print('Error generating thumbnail: $e');
         }
