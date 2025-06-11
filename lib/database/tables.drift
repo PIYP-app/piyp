@@ -8,6 +8,15 @@ CREATE TABLE Server (
   folder_path TEXT
 );
 
+CREATE TABLE Places (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  latitude REAL NOT NULL,
+  longitude REAL NOT NULL,
+  country TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE Media (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   serverId INT NOT NULL,
@@ -17,11 +26,13 @@ CREATE TABLE Media (
   creationDate TEXT NOT NULL,
   latitude  REAL,
   longitude REAL,
-  FOREIGN KEY(serverId) REFERENCES Server(id)
+  placeId TEXT,
+  FOREIGN KEY(serverId) REFERENCES Server(id),
+  FOREIGN KEY(placeId) REFERENCES Places(id)
 );
 
-insertMediaOnConflictUpdateEtag: INSERT INTO Media (serverId, eTag, mimeType, pathFile, creationDate, latitude, longitude)
-VALUES (?, ?, ?, ?, ?, ?, ?)
+insertMediaOnConflictUpdateEtag: INSERT INTO Media (serverId, eTag, mimeType, pathFile, creationDate, latitude, longitude, placeId)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(eTag)
 DO UPDATE SET
   serverId = excluded.serverId,
@@ -30,4 +41,15 @@ DO UPDATE SET
   pathFile = excluded.pathFile,
   creationDate = excluded.creationDate,
   latitude = excluded.latitude,
-  longitude = excluded.longitude;
+  longitude = excluded.longitude,
+  placeId = excluded.placeId;
+
+-- Insert or update place information
+insertOrUpdatePlace: INSERT INTO Places (id, name, latitude, longitude, country)
+VALUES (?, ?, ?, ?, ?)
+ON CONFLICT(id)
+DO UPDATE SET
+  name = excluded.name,
+  latitude = excluded.latitude,
+  longitude = excluded.longitude,
+  country = excluded.country;

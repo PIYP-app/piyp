@@ -1,26 +1,28 @@
 import 'dart:io';
-import 'dart:math';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:drift/drift.dart' hide Column;
 import 'package:piyp/database/database.dart';
 import 'package:piyp/init_db.dart';
 import 'package:piyp/thumbnail.dart';
 import 'package:http/http.dart' as http;
 
 class PlaceGroup {
+  final String placeId;
   final String name;
   final List<MediaData> photos;
   final double latitude;
   final double longitude;
-  final String? thumbnailPath;
+  final String? country;
 
   PlaceGroup({
+    required this.placeId,
     required this.name,
     required this.photos,
     required this.latitude,
     required this.longitude,
-    this.thumbnailPath,
+    this.country,
   });
 }
 
@@ -49,87 +51,13 @@ class _PlacesPageState extends State<PlacesPage> {
     });
 
     try {
-      // Get all photos with location data
-      final allMedias = await database.select(database.media).get();
+      // First, process any media without placeId
+      _processMediaWithoutPlaceId();
 
-      // Filter photos with location data and sort by creation date
-      final photosWithLocation = allMedias
-          .where((media) => media.latitude != null && media.longitude != null)
-          .toList()
-        ..sort((a, b) => DateTime.parse(b.creationDate)
-            .compareTo(DateTime.parse(a.creationDate)));
-
-      if (photosWithLocation.isEmpty) {
-        setState(() {
-          isLoading = false;
-        });
-        return;
-      }
-
-      // Group photos by approximate location (within ~5km)
-      final List<PlaceGroup> groupedPlaces = [];
-
-      for (final photo in photosWithLocation) {
-        bool addedToExisting = false;
-
-        // Check if this photo belongs to an existing place group
-        for (final place in groupedPlaces) {
-          final distance = _calculateDistance(
-            photo.latitude!,
-            photo.longitude!,
-            place.latitude,
-            place.longitude,
-          );
-
-          // If within 5km, add to existing group
-          if (distance <= 5.0) {
-            place.photos.add(photo);
-            addedToExisting = true;
-            break;
-          }
-        }
-
-        // If not added to existing group, create new one
-        if (!addedToExisting) {
-          final placeName =
-              await _getPlaceName(photo.latitude!, photo.longitude!);
-          groupedPlaces.add(PlaceGroup(
-            name: placeName,
-            photos: [photo],
-            latitude: photo.latitude!,
-            longitude: photo.longitude!,
-          ));
-        }
-      }
-
-      // Remove duplicates based on place names and merge photos
-      final Map<String, PlaceGroup> uniquePlaces = {};
-      for (final place in groupedPlaces) {
-        if (uniquePlaces.containsKey(place.name)) {
-          // Merge photos into existing place
-          uniquePlaces[place.name]!.photos.addAll(place.photos);
-        } else {
-          uniquePlaces[place.name] = place;
-        }
-      }
-
-      // Convert back to list and sort places by number of photos (most photos first)
-      final List<PlaceGroup> finalPlaces = uniquePlaces.values.toList();
-      finalPlaces.sort((a, b) => b.photos.length.compareTo(a.photos.length));
-
-      // Load thumbnails for the first photo of each place
-      for (final place in finalPlaces) {
-        if (place.photos.isNotEmpty) {
-          // Thumbnail will be loaded when needed in the UI
-          place.photos.first; // Keep reference for UI
-        }
-      }
-
-      setState(() {
-        places = finalPlaces;
-        isLoading = false;
-      });
+      // Then load places from database
+      await _loadPlacesFromDatabase();
     } catch (e) {
+      debugPrint('Failed to load places: $e');
       setState(() {
         errorMessage = 'Failed to load places: $e';
         isLoading = false;
@@ -137,31 +65,99 @@ class _PlacesPageState extends State<PlacesPage> {
     }
   }
 
-  // Calculate distance between two coordinates using Haversine formula
-  double _calculateDistance(
-      double lat1, double lon1, double lat2, double lon2) {
-    const double earthRadius = 6371; // Earth's radius in kilometers
+  Future<void> _processMediaWithoutPlaceId() async {
+    // Get all media with location but no placeId
+    final mediaWithoutPlaceId = await (database.select(database.media)
+          ..where((m) =>
+              m.latitude.isNotNull() &
+              m.longitude.isNotNull() &
+              m.placeId.isNull()))
+        .get();
 
-    final double dLat = _toRadians(lat2 - lat1);
-    final double dLon = _toRadians(lon2 - lon1);
+    if (mediaWithoutPlaceId.isEmpty) return;
 
-    final double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_toRadians(lat1)) *
-            cos(_toRadians(lat2)) *
-            sin(dLon / 2) *
-            sin(dLon / 2);
+    debugPrint(
+        'Processing ${mediaWithoutPlaceId.length} media items without placeId');
 
-    final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    for (final media in mediaWithoutPlaceId) {
+      try {
+        final placeData =
+            await _getPlaceData(media.latitude!, media.longitude!);
 
-    return earthRadius * c;
+        // Insert or update place in database
+        await database.insertOrUpdatePlace(
+          placeData['id'],
+          placeData['name'],
+          placeData['latitude'],
+          placeData['longitude'],
+          placeData['country'],
+        );
+
+        // Update media with placeId
+        await (database.update(database.media)
+              ..where((m) => m.id.equals(media.id)))
+            .write(MediaCompanion(placeId: Value(placeData['id'])));
+
+        await _loadPlacesFromDatabase();
+      } catch (e) {
+        debugPrint('Failed to process media ${media.id}: $e');
+        // Continue with next media item
+      }
+    }
   }
 
-  double _toRadians(double degrees) {
-    return degrees * pi / 180;
+  Future<void> _loadPlacesFromDatabase() async {
+    // Get all places with their media count
+    const query = '''
+      SELECT p.id, p.name, p.latitude, p.longitude, p.country, COUNT(m.id) as photo_count
+      FROM Places p
+      LEFT JOIN Media m ON p.id = m.placeId
+      GROUP BY p.id, p.name, p.latitude, p.longitude, p.country
+      HAVING photo_count > 0
+      ORDER BY photo_count DESC
+    ''';
+
+    try {
+      final result = await database.customSelect(query).get();
+
+      final List<PlaceGroup> loadedPlaces = [];
+
+      for (final row in result) {
+        final placeId = row.read<String>('id');
+        final name = row.read<String>('name');
+        final latitude = row.read<double>('latitude');
+        final longitude = row.read<double>('longitude');
+        final country = row.read<String?>('country');
+
+        // Get photos for this place
+        final photos = await (database.select(database.media)
+              ..where((m) => m.placeId.equals(placeId))
+              ..orderBy([(m) => OrderingTerm.desc(m.creationDate)]))
+            .get();
+
+        if (photos.isNotEmpty) {
+          loadedPlaces.add(PlaceGroup(
+            placeId: placeId,
+            name: name,
+            photos: photos,
+            latitude: latitude,
+            longitude: longitude,
+            country: country,
+          ));
+        }
+      }
+
+      setState(() {
+        places = loadedPlaces;
+        isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Failed to load places: $e');
+    }
   }
 
-  // Use OSM Nominatim API for reverse geocoding
-  Future<String> _getPlaceName(double latitude, double longitude) async {
+  Future<Map<String, dynamic>> _getPlaceData(
+      double latitude, double longitude) async {
     try {
       // Use OpenStreetMap Nominatim API for reverse geocoding
       final uri = Uri.parse(
@@ -171,30 +167,68 @@ class _PlacesPageState extends State<PlacesPage> {
       final response = await http.get(
         uri,
         headers: {
-          'User-Agent':
-              'PIYP Flutter App/1.0 (contact@example.com)', // Required by Nominatim policy
+          'User-Agent': 'PIYP Flutter App/1.0 (contact@example.com)',
         },
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
 
-        // Extract place name from the response
-        String placeName = _extractPlaceNameFromNominatim(data);
+        // Extract place name and create unique ID
+        final placeName = _extractPlaceNameFromNominatim(data);
+        final placeId = _generatePlaceId(data);
+        final country = _extractCountry(data);
 
-        if (placeName.isNotEmpty && placeName != 'Unknown Location') {
-          return placeName;
-        }
+        return {
+          'id': placeId,
+          'name': placeName,
+          'latitude': latitude,
+          'longitude': longitude,
+          'country': country,
+        };
       }
     } catch (e) {
-      // If geocoding fails, fall back to coordinates
       debugPrint('Geocoding failed for $latitude, $longitude: $e');
     }
 
-    // Fallback to coordinate-based name
+    // Fallback to coordinate-based data
     final latDirection = latitude >= 0 ? 'N' : 'S';
     final lonDirection = longitude >= 0 ? 'E' : 'W';
-    return '${latitude.abs().toStringAsFixed(2)}°$latDirection, ${longitude.abs().toStringAsFixed(2)}°$lonDirection';
+    final coordName =
+        '${latitude.abs().toStringAsFixed(2)}°$latDirection, ${longitude.abs().toStringAsFixed(2)}°$lonDirection';
+
+    return {
+      'id':
+          'coord_${latitude.toStringAsFixed(6)}_${longitude.toStringAsFixed(6)}',
+      'name': coordName,
+      'latitude': latitude,
+      'longitude': longitude,
+      'country': null,
+    };
+  }
+
+  String _generatePlaceId(Map<String, dynamic> data) {
+    // Create a unique ID based on OSM osm_id or combination of city/country
+    if (data['osm_id'] != null) {
+      return 'osm_${data['osm_id']}';
+    }
+
+    final address = data['address'] as Map<String, dynamic>?;
+    if (address != null) {
+      final city = address['city'] ??
+          address['town'] ??
+          address['village'] ??
+          address['suburb'];
+      final country = address['country'];
+      if (city != null && country != null) {
+        return 'place_${city.toString().toLowerCase().replaceAll(' ', '_')}_${country.toString().toLowerCase().replaceAll(' ', '_')}';
+      }
+    }
+
+    // Fallback to coordinates
+    final lat = data['lat']?.toString() ?? '';
+    final lon = data['lon']?.toString() ?? '';
+    return 'coord_${lat}_$lon';
   }
 
   String _extractPlaceNameFromNominatim(Map<String, dynamic> data) {
@@ -219,9 +253,6 @@ class _PlacesPageState extends State<PlacesPage> {
         nameParts.add(address['municipality'].toString());
       }
 
-      // Skip state/region to keep names shorter and more readable
-      // This prevents long names like "Tours, Centre-Val de Loire, France"
-
       // Always add country if available
       if (address['country']?.toString().isNotEmpty == true) {
         nameParts.add(address['country'].toString());
@@ -236,6 +267,15 @@ class _PlacesPageState extends State<PlacesPage> {
       return _fallbackFromDisplayName(data['display_name'] as String?);
     } catch (e) {
       return _fallbackFromDisplayName(data['display_name'] as String?);
+    }
+  }
+
+  String? _extractCountry(Map<String, dynamic> data) {
+    try {
+      final address = data['address'] as Map<String, dynamic>?;
+      return address?['country']?.toString();
+    } catch (e) {
+      return null;
     }
   }
 
@@ -353,7 +393,7 @@ class _PlacesPageState extends State<PlacesPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Image section - 2x2 grid of photos
+            // Image section - dynamic photo layout
             Expanded(
               flex: 4,
               child: ClipRRect(
@@ -583,8 +623,7 @@ class _PlacesPageState extends State<PlacesPage> {
                           crossAxisCount: 2,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
-                          childAspectRatio:
-                              0.75, // Adjusted for better proportions
+                          childAspectRatio: 0.75,
                         ),
                         itemCount: places.length,
                         itemBuilder: (context, index) {

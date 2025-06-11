@@ -387,6 +387,358 @@ class ServerCompanion extends UpdateCompanion<ServerData> {
   }
 }
 
+class Places extends Table with TableInfo<Places, Place> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Places(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      $customConstraints: 'PRIMARY KEY');
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      $customConstraints: 'NOT NULL');
+  static const VerificationMeta _latitudeMeta =
+      const VerificationMeta('latitude');
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+      'latitude', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: true,
+      $customConstraints: 'NOT NULL');
+  static const VerificationMeta _longitudeMeta =
+      const VerificationMeta('longitude');
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+      'longitude', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: true,
+      $customConstraints: 'NOT NULL');
+  static const VerificationMeta _countryMeta =
+      const VerificationMeta('country');
+  late final GeneratedColumn<String> country = GeneratedColumn<String>(
+      'country', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      $customConstraints: '');
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      $customConstraints: 'NOT NULL DEFAULT CURRENT_TIMESTAMP',
+      defaultValue: const CustomExpression('CURRENT_TIMESTAMP'));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, latitude, longitude, country, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'Places';
+  @override
+  VerificationContext validateIntegrity(Insertable<Place> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(_latitudeMeta,
+          latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta));
+    } else if (isInserting) {
+      context.missing(_latitudeMeta);
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(_longitudeMeta,
+          longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta));
+    } else if (isInserting) {
+      context.missing(_longitudeMeta);
+    }
+    if (data.containsKey('country')) {
+      context.handle(_countryMeta,
+          country.isAcceptableOrUnknown(data['country']!, _countryMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Place map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Place(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id']),
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      latitude: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}latitude'])!,
+      longitude: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}longitude'])!,
+      country: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}country']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  Places createAlias(String alias) {
+    return Places(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class Place extends DataClass implements Insertable<Place> {
+  final String? id;
+  final String name;
+  final double latitude;
+  final double longitude;
+  final String? country;
+  final String createdAt;
+  const Place(
+      {this.id,
+      required this.name,
+      required this.latitude,
+      required this.longitude,
+      this.country,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (!nullToAbsent || id != null) {
+      map['id'] = Variable<String>(id);
+    }
+    map['name'] = Variable<String>(name);
+    map['latitude'] = Variable<double>(latitude);
+    map['longitude'] = Variable<double>(longitude);
+    if (!nullToAbsent || country != null) {
+      map['country'] = Variable<String>(country);
+    }
+    map['created_at'] = Variable<String>(createdAt);
+    return map;
+  }
+
+  PlacesCompanion toCompanion(bool nullToAbsent) {
+    return PlacesCompanion(
+      id: id == null && nullToAbsent ? const Value.absent() : Value(id),
+      name: Value(name),
+      latitude: Value(latitude),
+      longitude: Value(longitude),
+      country: country == null && nullToAbsent
+          ? const Value.absent()
+          : Value(country),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory Place.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Place(
+      id: serializer.fromJson<String?>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      latitude: serializer.fromJson<double>(json['latitude']),
+      longitude: serializer.fromJson<double>(json['longitude']),
+      country: serializer.fromJson<String?>(json['country']),
+      createdAt: serializer.fromJson<String>(json['created_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String?>(id),
+      'name': serializer.toJson<String>(name),
+      'latitude': serializer.toJson<double>(latitude),
+      'longitude': serializer.toJson<double>(longitude),
+      'country': serializer.toJson<String?>(country),
+      'created_at': serializer.toJson<String>(createdAt),
+    };
+  }
+
+  Place copyWith(
+          {Value<String?> id = const Value.absent(),
+          String? name,
+          double? latitude,
+          double? longitude,
+          Value<String?> country = const Value.absent(),
+          String? createdAt}) =>
+      Place(
+        id: id.present ? id.value : this.id,
+        name: name ?? this.name,
+        latitude: latitude ?? this.latitude,
+        longitude: longitude ?? this.longitude,
+        country: country.present ? country.value : this.country,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  Place copyWithCompanion(PlacesCompanion data) {
+    return Place(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      country: data.country.present ? data.country.value : this.country,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Place(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('country: $country, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, latitude, longitude, country, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Place &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.country == this.country &&
+          other.createdAt == this.createdAt);
+}
+
+class PlacesCompanion extends UpdateCompanion<Place> {
+  final Value<String?> id;
+  final Value<String> name;
+  final Value<double> latitude;
+  final Value<double> longitude;
+  final Value<String?> country;
+  final Value<String> createdAt;
+  final Value<int> rowid;
+  const PlacesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.country = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlacesCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required double latitude,
+    required double longitude,
+    this.country = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : name = Value(name),
+        latitude = Value(latitude),
+        longitude = Value(longitude);
+  static Insertable<Place> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<String>? country,
+    Expression<String>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (country != null) 'country': country,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlacesCompanion copyWith(
+      {Value<String?>? id,
+      Value<String>? name,
+      Value<double>? latitude,
+      Value<double>? longitude,
+      Value<String?>? country,
+      Value<String>? createdAt,
+      Value<int>? rowid}) {
+    return PlacesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      country: country ?? this.country,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (country.present) {
+      map['country'] = Variable<String>(country.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlacesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('country: $country, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class Media extends Table with TableInfo<Media, MediaData> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -448,6 +800,13 @@ class Media extends Table with TableInfo<Media, MediaData> {
       type: DriftSqlType.double,
       requiredDuringInsert: false,
       $customConstraints: '');
+  static const VerificationMeta _placeIdMeta =
+      const VerificationMeta('placeId');
+  late final GeneratedColumn<String> placeId = GeneratedColumn<String>(
+      'placeId', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      $customConstraints: '');
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -457,7 +816,8 @@ class Media extends Table with TableInfo<Media, MediaData> {
         pathFile,
         creationDate,
         latitude,
-        longitude
+        longitude,
+        placeId
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -512,6 +872,10 @@ class Media extends Table with TableInfo<Media, MediaData> {
       context.handle(_longitudeMeta,
           longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta));
     }
+    if (data.containsKey('placeId')) {
+      context.handle(_placeIdMeta,
+          placeId.isAcceptableOrUnknown(data['placeId']!, _placeIdMeta));
+    }
     return context;
   }
 
@@ -537,6 +901,8 @@ class Media extends Table with TableInfo<Media, MediaData> {
           .read(DriftSqlType.double, data['${effectivePrefix}latitude']),
       longitude: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}longitude']),
+      placeId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}placeId']),
     );
   }
 
@@ -546,8 +912,10 @@ class Media extends Table with TableInfo<Media, MediaData> {
   }
 
   @override
-  List<String> get customConstraints =>
-      const ['FOREIGN KEY(serverId)REFERENCES Server(id)'];
+  List<String> get customConstraints => const [
+        'FOREIGN KEY(serverId)REFERENCES Server(id)',
+        'FOREIGN KEY(placeId)REFERENCES Places(id)'
+      ];
   @override
   bool get dontWriteConstraints => true;
 }
@@ -561,6 +929,7 @@ class MediaData extends DataClass implements Insertable<MediaData> {
   final String creationDate;
   final double? latitude;
   final double? longitude;
+  final String? placeId;
   const MediaData(
       {required this.id,
       required this.serverId,
@@ -569,7 +938,8 @@ class MediaData extends DataClass implements Insertable<MediaData> {
       required this.pathFile,
       required this.creationDate,
       this.latitude,
-      this.longitude});
+      this.longitude,
+      this.placeId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -584,6 +954,9 @@ class MediaData extends DataClass implements Insertable<MediaData> {
     }
     if (!nullToAbsent || longitude != null) {
       map['longitude'] = Variable<double>(longitude);
+    }
+    if (!nullToAbsent || placeId != null) {
+      map['placeId'] = Variable<String>(placeId);
     }
     return map;
   }
@@ -602,6 +975,9 @@ class MediaData extends DataClass implements Insertable<MediaData> {
       longitude: longitude == null && nullToAbsent
           ? const Value.absent()
           : Value(longitude),
+      placeId: placeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(placeId),
     );
   }
 
@@ -617,6 +993,7 @@ class MediaData extends DataClass implements Insertable<MediaData> {
       creationDate: serializer.fromJson<String>(json['creationDate']),
       latitude: serializer.fromJson<double?>(json['latitude']),
       longitude: serializer.fromJson<double?>(json['longitude']),
+      placeId: serializer.fromJson<String?>(json['placeId']),
     );
   }
   @override
@@ -631,6 +1008,7 @@ class MediaData extends DataClass implements Insertable<MediaData> {
       'creationDate': serializer.toJson<String>(creationDate),
       'latitude': serializer.toJson<double?>(latitude),
       'longitude': serializer.toJson<double?>(longitude),
+      'placeId': serializer.toJson<String?>(placeId),
     };
   }
 
@@ -642,7 +1020,8 @@ class MediaData extends DataClass implements Insertable<MediaData> {
           String? pathFile,
           String? creationDate,
           Value<double?> latitude = const Value.absent(),
-          Value<double?> longitude = const Value.absent()}) =>
+          Value<double?> longitude = const Value.absent(),
+          Value<String?> placeId = const Value.absent()}) =>
       MediaData(
         id: id ?? this.id,
         serverId: serverId ?? this.serverId,
@@ -652,6 +1031,7 @@ class MediaData extends DataClass implements Insertable<MediaData> {
         creationDate: creationDate ?? this.creationDate,
         latitude: latitude.present ? latitude.value : this.latitude,
         longitude: longitude.present ? longitude.value : this.longitude,
+        placeId: placeId.present ? placeId.value : this.placeId,
       );
   MediaData copyWithCompanion(MediaCompanion data) {
     return MediaData(
@@ -665,6 +1045,7 @@ class MediaData extends DataClass implements Insertable<MediaData> {
           : this.creationDate,
       latitude: data.latitude.present ? data.latitude.value : this.latitude,
       longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      placeId: data.placeId.present ? data.placeId.value : this.placeId,
     );
   }
 
@@ -678,14 +1059,15 @@ class MediaData extends DataClass implements Insertable<MediaData> {
           ..write('pathFile: $pathFile, ')
           ..write('creationDate: $creationDate, ')
           ..write('latitude: $latitude, ')
-          ..write('longitude: $longitude')
+          ..write('longitude: $longitude, ')
+          ..write('placeId: $placeId')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(id, serverId, eTag, mimeType, pathFile,
-      creationDate, latitude, longitude);
+      creationDate, latitude, longitude, placeId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -697,7 +1079,8 @@ class MediaData extends DataClass implements Insertable<MediaData> {
           other.pathFile == this.pathFile &&
           other.creationDate == this.creationDate &&
           other.latitude == this.latitude &&
-          other.longitude == this.longitude);
+          other.longitude == this.longitude &&
+          other.placeId == this.placeId);
 }
 
 class MediaCompanion extends UpdateCompanion<MediaData> {
@@ -709,6 +1092,7 @@ class MediaCompanion extends UpdateCompanion<MediaData> {
   final Value<String> creationDate;
   final Value<double?> latitude;
   final Value<double?> longitude;
+  final Value<String?> placeId;
   const MediaCompanion({
     this.id = const Value.absent(),
     this.serverId = const Value.absent(),
@@ -718,6 +1102,7 @@ class MediaCompanion extends UpdateCompanion<MediaData> {
     this.creationDate = const Value.absent(),
     this.latitude = const Value.absent(),
     this.longitude = const Value.absent(),
+    this.placeId = const Value.absent(),
   });
   MediaCompanion.insert({
     this.id = const Value.absent(),
@@ -728,6 +1113,7 @@ class MediaCompanion extends UpdateCompanion<MediaData> {
     required String creationDate,
     this.latitude = const Value.absent(),
     this.longitude = const Value.absent(),
+    this.placeId = const Value.absent(),
   })  : serverId = Value(serverId),
         eTag = Value(eTag),
         mimeType = Value(mimeType),
@@ -742,6 +1128,7 @@ class MediaCompanion extends UpdateCompanion<MediaData> {
     Expression<String>? creationDate,
     Expression<double>? latitude,
     Expression<double>? longitude,
+    Expression<String>? placeId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -752,6 +1139,7 @@ class MediaCompanion extends UpdateCompanion<MediaData> {
       if (creationDate != null) 'creationDate': creationDate,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
+      if (placeId != null) 'placeId': placeId,
     });
   }
 
@@ -763,7 +1151,8 @@ class MediaCompanion extends UpdateCompanion<MediaData> {
       Value<String>? pathFile,
       Value<String>? creationDate,
       Value<double?>? latitude,
-      Value<double?>? longitude}) {
+      Value<double?>? longitude,
+      Value<String?>? placeId}) {
     return MediaCompanion(
       id: id ?? this.id,
       serverId: serverId ?? this.serverId,
@@ -773,6 +1162,7 @@ class MediaCompanion extends UpdateCompanion<MediaData> {
       creationDate: creationDate ?? this.creationDate,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      placeId: placeId ?? this.placeId,
     );
   }
 
@@ -803,6 +1193,9 @@ class MediaCompanion extends UpdateCompanion<MediaData> {
     if (longitude.present) {
       map['longitude'] = Variable<double>(longitude.value);
     }
+    if (placeId.present) {
+      map['placeId'] = Variable<String>(placeId.value);
+    }
     return map;
   }
 
@@ -816,7 +1209,8 @@ class MediaCompanion extends UpdateCompanion<MediaData> {
           ..write('pathFile: $pathFile, ')
           ..write('creationDate: $creationDate, ')
           ..write('latitude: $latitude, ')
-          ..write('longitude: $longitude')
+          ..write('longitude: $longitude, ')
+          ..write('placeId: $placeId')
           ..write(')'))
         .toString();
   }
@@ -826,11 +1220,19 @@ abstract class _$AppDb extends GeneratedDatabase {
   _$AppDb(QueryExecutor e) : super(e);
   $AppDbManager get managers => $AppDbManager(this);
   late final Server server = Server(this);
+  late final Places places = Places(this);
   late final Media media = Media(this);
-  Future<int> insertMediaOnConflictUpdateEtag(int var1, String var2,
-      String var3, String var4, String var5, double? var6, double? var7) {
+  Future<int> insertMediaOnConflictUpdateEtag(
+      int var1,
+      String var2,
+      String var3,
+      String var4,
+      String var5,
+      double? var6,
+      double? var7,
+      String? var8) {
     return customInsert(
-      'INSERT INTO Media (serverId, eTag, mimeType, pathFile, creationDate, latitude, longitude) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) ON CONFLICT (eTag) DO UPDATE SET serverId = excluded.serverId, eTag = excluded.eTag, mimeType = excluded.mimeType, pathFile = excluded.pathFile, creationDate = excluded.creationDate, latitude = excluded.latitude, longitude = excluded.longitude',
+      'INSERT INTO Media (serverId, eTag, mimeType, pathFile, creationDate, latitude, longitude, placeId) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8) ON CONFLICT (eTag) DO UPDATE SET serverId = excluded.serverId, eTag = excluded.eTag, mimeType = excluded.mimeType, pathFile = excluded.pathFile, creationDate = excluded.creationDate, latitude = excluded.latitude, longitude = excluded.longitude, placeId = excluded.placeId',
       variables: [
         Variable<int>(var1),
         Variable<String>(var2),
@@ -838,9 +1240,25 @@ abstract class _$AppDb extends GeneratedDatabase {
         Variable<String>(var4),
         Variable<String>(var5),
         Variable<double>(var6),
-        Variable<double>(var7)
+        Variable<double>(var7),
+        Variable<String>(var8)
       ],
       updates: {media},
+    );
+  }
+
+  Future<int> insertOrUpdatePlace(
+      String? var1, String var2, double var3, double var4, String? var5) {
+    return customInsert(
+      'INSERT INTO Places (id, name, latitude, longitude, country) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT (id) DO UPDATE SET name = excluded.name, latitude = excluded.latitude, longitude = excluded.longitude, country = excluded.country',
+      variables: [
+        Variable<String>(var1),
+        Variable<String>(var2),
+        Variable<double>(var3),
+        Variable<double>(var4),
+        Variable<String>(var5)
+      ],
+      updates: {places},
     );
   }
 
@@ -848,7 +1266,7 @@ abstract class _$AppDb extends GeneratedDatabase {
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [server, media];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [server, places, media];
 }
 
 typedef $ServerCreateCompanionBuilder = ServerCompanion Function({
@@ -1017,6 +1435,162 @@ typedef $ServerProcessedTableManager = ProcessedTableManager<
     (ServerData, BaseReferences<_$AppDb, Server, ServerData>),
     ServerData,
     PrefetchHooks Function()>;
+typedef $PlacesCreateCompanionBuilder = PlacesCompanion Function({
+  Value<String?> id,
+  required String name,
+  required double latitude,
+  required double longitude,
+  Value<String?> country,
+  Value<String> createdAt,
+  Value<int> rowid,
+});
+typedef $PlacesUpdateCompanionBuilder = PlacesCompanion Function({
+  Value<String?> id,
+  Value<String> name,
+  Value<double> latitude,
+  Value<double> longitude,
+  Value<String?> country,
+  Value<String> createdAt,
+  Value<int> rowid,
+});
+
+class $PlacesFilterComposer extends FilterComposer<_$AppDb, Places> {
+  $PlacesFilterComposer(super.$state);
+  ColumnFilters<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get name => $state.composableBuilder(
+      column: $state.table.name,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<double> get latitude => $state.composableBuilder(
+      column: $state.table.latitude,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<double> get longitude => $state.composableBuilder(
+      column: $state.table.longitude,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get country => $state.composableBuilder(
+      column: $state.table.country,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+}
+
+class $PlacesOrderingComposer extends OrderingComposer<_$AppDb, Places> {
+  $PlacesOrderingComposer(super.$state);
+  ColumnOrderings<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get name => $state.composableBuilder(
+      column: $state.table.name,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<double> get latitude => $state.composableBuilder(
+      column: $state.table.latitude,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<double> get longitude => $state.composableBuilder(
+      column: $state.table.longitude,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get country => $state.composableBuilder(
+      column: $state.table.country,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+}
+
+class $PlacesTableManager extends RootTableManager<
+    _$AppDb,
+    Places,
+    Place,
+    $PlacesFilterComposer,
+    $PlacesOrderingComposer,
+    $PlacesCreateCompanionBuilder,
+    $PlacesUpdateCompanionBuilder,
+    (Place, BaseReferences<_$AppDb, Places, Place>),
+    Place,
+    PrefetchHooks Function()> {
+  $PlacesTableManager(_$AppDb db, Places table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          filteringComposer: $PlacesFilterComposer(ComposerState(db, table)),
+          orderingComposer: $PlacesOrderingComposer(ComposerState(db, table)),
+          updateCompanionCallback: ({
+            Value<String?> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<double> latitude = const Value.absent(),
+            Value<double> longitude = const Value.absent(),
+            Value<String?> country = const Value.absent(),
+            Value<String> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlacesCompanion(
+            id: id,
+            name: name,
+            latitude: latitude,
+            longitude: longitude,
+            country: country,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            Value<String?> id = const Value.absent(),
+            required String name,
+            required double latitude,
+            required double longitude,
+            Value<String?> country = const Value.absent(),
+            Value<String> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlacesCompanion.insert(
+            id: id,
+            name: name,
+            latitude: latitude,
+            longitude: longitude,
+            country: country,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $PlacesProcessedTableManager = ProcessedTableManager<
+    _$AppDb,
+    Places,
+    Place,
+    $PlacesFilterComposer,
+    $PlacesOrderingComposer,
+    $PlacesCreateCompanionBuilder,
+    $PlacesUpdateCompanionBuilder,
+    (Place, BaseReferences<_$AppDb, Places, Place>),
+    Place,
+    PrefetchHooks Function()>;
 typedef $MediaCreateCompanionBuilder = MediaCompanion Function({
   Value<int> id,
   required int serverId,
@@ -1026,6 +1600,7 @@ typedef $MediaCreateCompanionBuilder = MediaCompanion Function({
   required String creationDate,
   Value<double?> latitude,
   Value<double?> longitude,
+  Value<String?> placeId,
 });
 typedef $MediaUpdateCompanionBuilder = MediaCompanion Function({
   Value<int> id,
@@ -1036,6 +1611,7 @@ typedef $MediaUpdateCompanionBuilder = MediaCompanion Function({
   Value<String> creationDate,
   Value<double?> latitude,
   Value<double?> longitude,
+  Value<String?> placeId,
 });
 
 class $MediaFilterComposer extends FilterComposer<_$AppDb, Media> {
@@ -1077,6 +1653,11 @@ class $MediaFilterComposer extends FilterComposer<_$AppDb, Media> {
 
   ColumnFilters<double> get longitude => $state.composableBuilder(
       column: $state.table.longitude,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get placeId => $state.composableBuilder(
+      column: $state.table.placeId,
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
 }
@@ -1122,6 +1703,11 @@ class $MediaOrderingComposer extends OrderingComposer<_$AppDb, Media> {
       column: $state.table.longitude,
       builder: (column, joinBuilders) =>
           ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get placeId => $state.composableBuilder(
+      column: $state.table.placeId,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
 }
 
 class $MediaTableManager extends RootTableManager<
@@ -1150,6 +1736,7 @@ class $MediaTableManager extends RootTableManager<
             Value<String> creationDate = const Value.absent(),
             Value<double?> latitude = const Value.absent(),
             Value<double?> longitude = const Value.absent(),
+            Value<String?> placeId = const Value.absent(),
           }) =>
               MediaCompanion(
             id: id,
@@ -1160,6 +1747,7 @@ class $MediaTableManager extends RootTableManager<
             creationDate: creationDate,
             latitude: latitude,
             longitude: longitude,
+            placeId: placeId,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -1170,6 +1758,7 @@ class $MediaTableManager extends RootTableManager<
             required String creationDate,
             Value<double?> latitude = const Value.absent(),
             Value<double?> longitude = const Value.absent(),
+            Value<String?> placeId = const Value.absent(),
           }) =>
               MediaCompanion.insert(
             id: id,
@@ -1180,6 +1769,7 @@ class $MediaTableManager extends RootTableManager<
             creationDate: creationDate,
             latitude: latitude,
             longitude: longitude,
+            placeId: placeId,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -1204,5 +1794,6 @@ class $AppDbManager {
   final _$AppDb _db;
   $AppDbManager(this._db);
   $ServerTableManager get server => $ServerTableManager(_db, _db.server);
+  $PlacesTableManager get places => $PlacesTableManager(_db, _db.places);
   $MediaTableManager get media => $MediaTableManager(_db, _db.media);
 }

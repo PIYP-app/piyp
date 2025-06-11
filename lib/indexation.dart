@@ -51,6 +51,7 @@ class _IndexationPageState extends State<IndexationPage> {
           file.creationDate.value,
           file.latitude.value,
           file.longitude.value,
+          null, // placeId - will be populated later
         );
 
         setState(() {

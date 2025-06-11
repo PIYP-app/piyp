@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:piyp/database/database.dart';
 import 'package:piyp/enum.dart';
 import 'package:piyp/init_db.dart';
@@ -28,6 +29,7 @@ class Sources {
         await newClient.testServerConnection();
 
         if (newClient.isErrored) {
+          debugPrint('Server ${server.id} is errored');
           return;
         }
 
@@ -71,6 +73,7 @@ class Sources {
         media.pathFile.value,
         media.creationDate.value,
         media.latitude.value,
-        media.longitude.value);
+        media.longitude.value,
+        media.placeId.value);
   }
 }
