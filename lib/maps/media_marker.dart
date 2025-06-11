@@ -27,7 +27,7 @@ class MediaMarker extends StatelessWidget {
           .getSingle();
       return media;
     } catch (e) {
-      print('Error retrieving media from eTag: $e');
+      debugPrint('Error retrieving media from eTag: $e');
       return null;
     }
   }
