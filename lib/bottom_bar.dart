@@ -10,11 +10,14 @@ class BottomBar extends StatelessWidget {
     if (uri == '/') {
       return 0;
     }
-    if (uri == '/map') {
+    if (uri == '/places') {
       return 1;
     }
-    if (uri == '/settings') {
+    if (uri == '/map') {
       return 2;
+    }
+    if (uri == '/settings') {
+      return 3;
     }
     return -1;
   }
@@ -27,6 +30,10 @@ class BottomBar extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.photo_fill_on_rectangle_fill),
             label: 'Library',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.location_solid),
+            label: 'Places',
           ),
           BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.map),
@@ -46,9 +53,12 @@ class BottomBar extends StatelessWidget {
               context.push('/');
               break;
             case 1:
-              context.push('/map');
+              context.push('/places');
               break;
             case 2:
+              context.push('/map');
+              break;
+            case 3:
               context.push('/settings');
               break;
           }

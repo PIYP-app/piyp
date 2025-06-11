@@ -5,6 +5,8 @@ import 'package:piyp/carousel.dart';
 import 'package:piyp/home_page.dart';
 import 'package:piyp/indexation.dart';
 import 'package:piyp/maps.dart';
+import 'package:piyp/places_page.dart';
+import 'package:piyp/place_detail_page.dart';
 import 'package:piyp/settings/edit_server.dart';
 import 'package:piyp/settings_page.dart';
 import 'package:piyp/video_page.dart';
@@ -26,6 +28,11 @@ final appRouter = GoRouter(
             name: 'Home',
             path: '/',
             builder: (context, state) => const HomePage(),
+          ),
+          GoRoute(
+            name: 'Places',
+            path: '/places',
+            builder: (context, state) => const PlacesPage(),
           ),
           GoRoute(
             name: 'Map',
@@ -50,6 +57,17 @@ final appRouter = GoRouter(
         builder: (context, state) => VideoPage(
               eTag: state.pathParameters['eTag'],
             )),
+    GoRoute(
+        name: 'PlaceDetail',
+        path: '/places/:placeName',
+        builder: (context, state) {
+          final place = state.extra as PlaceGroup;
+          return PlaceDetailPage(
+            placeName:
+                Uri.decodeComponent(state.pathParameters['placeName'] ?? ''),
+            place: place,
+          );
+        }),
     GoRoute(
         name: 'EditServer',
         path: '/settings/edit/:id',

@@ -54,6 +54,7 @@ dependencies:
 
   # Network & WebDAV
   webdav_client: ^1.2.1
+  http: ^1.1.0
 
   # Navigation
   go_router: ^14.2.1
