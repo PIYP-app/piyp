@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:piyp/database/database.dart';
 import 'package:piyp/enum.dart';
 import 'package:piyp/init_db.dart';
+import 'package:piyp/thumbnail.dart';
 import 'package:go_router/go_router.dart';
 
 class NewSettingsPage extends StatefulWidget {
@@ -741,11 +742,242 @@ class _NewSettingsPageState extends State<NewSettingsPage>
               ),
             ),
 
+            const SizedBox(height: 32),
+
+            // Clear Data Section
+            Card(
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.cleaning_services,
+                          color: Colors.red[600],
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Clear Data',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Remove all cached thumbnails and reset the database. This will not affect your original photos on the server.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _showClearDataDialog,
+                        icon: const Icon(Icons.delete_forever),
+                        label: const Text('Clear All Data'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[600],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
             const SizedBox(height: 40),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _showClearDataDialog() async {
+    // Get cache size for display
+    final cacheSize = await Thumbnail.getThumbnailCacheSize();
+    final cacheSizeMB = (cacheSize / (1024 * 1024)).toStringAsFixed(1);
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.warning, color: Colors.orange[600]),
+              const SizedBox(width: 12),
+              const Text('Clear All Data?'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'This will permanently delete:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.image, size: 20, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Text('All thumbnails ($cacheSizeMB MB)'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Row(
+                children: [
+                  Icon(Icons.storage, size: 20, color: Colors.grey),
+                  SizedBox(width: 8),
+                  Text('Media database entries'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Row(
+                children: [
+                  Icon(Icons.location_on, size: 20, color: Colors.grey),
+                  SizedBox(width: 8),
+                  Text('Places database entries'),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info, color: Colors.amber[700], size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Your original photos on the server will NOT be affected.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _performClearData();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[600],
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Clear Data'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _performClearData() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Clearing data...'),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      // Clear thumbnails
+      await Thumbnail.clearThumbnailCache();
+
+      // Clear database - delete all media and places
+      await database.delete(database.media).go();
+      await database.delete(database.places).go();
+
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Text('All data cleared successfully'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 12),
+                Text('Failed to clear data: $e'),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildTipItem({required IconData icon, required String text}) {
