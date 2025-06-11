@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:piyp/database/database.dart';
@@ -86,12 +87,11 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
 
       // Load from database first for faster initial display
-      List<MediaData> dbMedias = await database.select(database.media).get();
+      List<MediaData> dbMedias = await (database.select(database.media)
+            ..orderBy([(m) => OrderingTerm.desc(m.creationDate)]))
+          .get();
       List<MediaCompanion> dbMediasCompanion =
           dbMedias.map((media) => media.toCompanion(false)).toList();
-
-      dbMediasCompanion.sort((a, b) => DateTime.parse(b.creationDate.value)
-          .compareTo(DateTime.parse(a.creationDate.value)));
 
       if (mounted) {
         setState(() {
