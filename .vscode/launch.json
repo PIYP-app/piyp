@@ -5,21 +5,32 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "piyp",
+      "name": "PIYP (Debug)",
+      "type": "dart",
       "request": "launch",
-      "type": "dart"
+      "program": "lib/main.dart",
+      "flutterMode": "debug"
     },
     {
-      "name": "piyp (profile mode)",
-      "request": "launch",
+      "name": "PIYP (Release)",
       "type": "dart",
-      "flutterMode": "profile"
-    },
-    {
-      "name": "piyp (release mode)",
       "request": "launch",
-      "type": "dart",
+      "program": "lib/main.dart",
       "flutterMode": "release"
+    },
+    {
+      "name": "PIYP (macOS)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "macos"
+    },
+    {
+      "name": "PIYP (Chrome)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome"
     }
   ]
 }

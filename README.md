@@ -1,71 +1,177 @@
-# piyp
+# PIYP - Photos In Your Pocket
 
-## Requirements
+A modern, cross-platform mobile and desktop application to organize your photo library from any web source (WebDAV support). Built with Flutter for seamless multi-platform experience.
 
-First you must install:
+## ✨ Features
 
-- [bash (v5)](https://www.gnu.org/software/bash/)
-- [mise](https://mise.jdx.dev/)
+- 📱 **Cross-platform**: Runs on iOS, Android, macOS, Windows, and Linux
+- 🌐 **WebDAV Support**: Connect to any WebDAV server (Nextcloud, ownCloud, etc.)
+- 🖼️ **Smart Gallery**: Grid view with date-based organization
+- 🗂️ **EXIF Data**: Automatic extraction and display of photo metadata
+- 📍 **GPS Support**: View photo locations on an interactive map
+- 🎬 **Video Support**: Play and organize videos alongside photos
+- 💾 **Local Caching**: Efficient thumbnail generation and caching
+- 🔄 **Auto-sync**: Automatic synchronization with remote sources
+- 🌙 **Dark/Light Theme**: Follows system theme preferences
+- 🚀 **Modern UI**: Clean, Material Design 3 interface
 
-Afterwards you must run:
+## 🚀 Getting Started
 
-```sh
-$ mise plugins install android-sdk https://github.com/Syquel/mise-android-sdk.git
-$ mise install java yq jq # Install first because they are required by others tools
-$ mise install
-$ sdkmanager "platform-tools" "build-tools;33.0.3" "platforms;android-33" # Only if you want to build for android
-$ yes | flutter doctor --android-licenses # Only if you want to build for android
-```
+### Prerequisites
 
-At this point you should be ready to build app for android at least, please don't
-use `flutter upgrade` since this can break installation in some ways.
+First install the required tools:
 
-If you don't want to use mise you can follow the instructions from official website.
-https://docs.flutter.dev/get-started/install/macos/mobile-ios?tab=download#install-the-flutter-sdk
+- [Bash (v5)](https://www.gnu.org/software/bash/)
+- [mise](https://mise.jdx.dev/) (for development environment management)
 
-## Getting started
+### Development Setup
 
-### Start
+1. **Clone the repository**
 
-To start PIYP, run the following command:
+   ```bash
+   git clone https://github.com/yourusername/piyp.git
+   cd piyp
+   ```
 
-```
+2. **Install development tools**
+
+   ```bash
+   mise plugins install android-sdk https://github.com/Syquel/mise-android-sdk.git
+   mise install java yq jq  # Install first as they are required by other tools
+   mise install
+   ```
+
+3. **Configure Android (if building for Android)**
+
+   ```bash
+   sdkmanager "platform-tools" "build-tools;33.0.3" "platforms;android-33"
+   yes | flutter doctor --android-licenses
+   ```
+
+4. **Install dependencies**
+
+   ```bash
+   flutter pub get
+   ```
+
+5. **Generate database code**
+   ```bash
+   dart run build_runner build
+   ```
+
+### Running the App
+
+```bash
 flutter run
 ```
 
-## Create android emulator
+For specific platforms:
 
-You can create an android emulator using these commands:
-
-```sh
-$ sdkmanager "platform-tools" "build-tools;33.0.3" "platforms;android-33"
-$ sdkmanager --install "system-images;android-33;google_apis;x86_64"
-$ avdmanager create avd --name Pixel_8_Pro_AVD --package "system-images;android-33;google_apis;x86_64" --device "pixel_8_pro"
+```bash
+flutter run -d macos     # macOS
+flutter run -d windows   # Windows
+flutter run -d linux     # Linux
+flutter run -d chrome    # Web (for development)
 ```
 
-Then you must launch the emulator:
+## 📱 Setting Up Your Photo Source
 
-```sh
-$ flutter emulators --launch Pixel_8_Pro_AVD
+1. **Launch PIYP** and navigate to Settings
+2. **Add WebDAV Server** with your credentials:
+   - Server Name: Give it a memorable name
+   - Server URL: Your WebDAV endpoint (e.g., `https://cloud.example.com/remote.php/dav/files/username/`)
+   - Username: Your WebDAV username
+   - Password: Your WebDAV password
+   - Folder Path: Optional subfolder path
+3. **Test Connection** and start syncing your photos!
+
+### Supported WebDAV Providers
+
+- ✅ Nextcloud
+- ✅ ownCloud
+- ✅ Box.com
+- ✅ pCloud
+- ✅ Any standard WebDAV server
+
+## 🛠️ Development
+
+### Project Structure
+
+```
+lib/
+├── main.dart              # App entry point
+├── router.dart           # Navigation configuration
+├── database/             # Database schema and queries
+├── classes/              # Data models
+├── settings/             # Settings and configuration
+└── [other_features]/     # Feature-specific modules
 ```
 
-Finally you can now deploy PIYP on your emulator with:
+### Building for Production
 
-```sh
-$ flutter run
+**Android APK:**
+
+```bash
+flutter build apk --release
 ```
 
-## FAQ
+**iOS App:**
 
-### Flutter installation
-
-Refer to [asdf-flutter troobleshooting](https://github.com/asdf-community/asdf-flutter?tab=readme-ov-file#troubleshooting).
-
-### Gradle
-
-If you have an error with grade, try to run the following commands:
-
-```sh
-$ rm -rf ~/.gradle/ ~/.pub-cache
-$ flutter pub get
+```bash
+flutter build ios --release
 ```
+
+**Desktop Apps:**
+
+```bash
+flutter build macos --release    # macOS
+flutter build windows --release  # Windows
+flutter build linux --release    # Linux
+```
+
+## 🐛 Troubleshooting
+
+### Android Emulator Setup
+
+Create and launch an Android emulator:
+
+```bash
+sdkmanager "system-images;android-33;google_apis;x86_64"
+avdmanager create avd --name Pixel_8_Pro_AVD --package "system-images;android-33;google_apis;x86_64" --device "pixel_8_pro"
+flutter emulators --launch Pixel_8_Pro_AVD
+```
+
+### Gradle Issues
+
+If you encounter Gradle-related errors:
+
+```bash
+rm -rf ~/.gradle/ ~/.pub-cache
+flutter clean
+flutter pub get
+```
+
+### Flutter Installation
+
+For Flutter installation issues, refer to:
+
+- [Official Flutter Installation Guide](https://docs.flutter.dev/get-started/install)
+- [asdf-flutter Troubleshooting](https://github.com/asdf-community/asdf-flutter?tab=readme-ov-file#troubleshooting)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Flutter team for the amazing framework
+- WebDAV community for the protocol specification
+- All contributors who make this project better

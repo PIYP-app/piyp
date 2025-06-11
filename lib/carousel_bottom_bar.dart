@@ -81,14 +81,18 @@ class _CarouselBottomBarState extends State<CarouselBottomBar>
               InkWell(
                 child: const Icon(color: Colors.blue, CupertinoIcons.share),
                 onTap: () async {
+                  if (!mounted) return;
+                  final currentContext = context;
+                  final box = currentContext.findRenderObject() as RenderBox?;
+
                   final downloadImage = await DefaultCacheManager()
                       .getFileFromCache(
                           '${widget.file.server.getBaseUrl()}/${widget.file.name}');
 
-                  if (downloadImage == null) {
+                  if (downloadImage == null || !mounted) {
                     return;
                   }
-                  final box = context.findRenderObject() as RenderBox?;
+
                   final result = await Share.shareXFiles(
                       [XFile(downloadImage.file.path)],
                       fileNameOverrides: [downloadImage.file.basename],

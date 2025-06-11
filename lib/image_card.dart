@@ -1,6 +1,5 @@
-import 'dart:typed_data';
+import 'dart:io';
 
-import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:photo_view/photo_view.dart';
@@ -19,24 +18,25 @@ class ImageCard extends StatefulWidget {
 }
 
 class _ImageCardState extends State<ImageCard> {
-  Uint8List? compressedImage;
+  String? thumbnailPath;
   Sources sources = Sources();
-  late SourceFile? media;
+  SourceFile? media;
 
   @override
   void initState() {
     super.initState();
 
-    final indexMedia = sources.sources
-        .firstWhere((source) => source.id == widget.file.serverId.value)
-        .files
-        .indexWhere((file) => file.eTag == widget.file.eTag.value);
+    final sourceIndex = sources.sources
+        .indexWhere((source) => source.id == widget.file.serverId.value);
 
-    media = indexMedia != -1
-        ? sources.sources
-            .firstWhere((source) => source.id == widget.file.serverId.value)
-            .files[indexMedia]
-        : null;
+    if (sourceIndex != -1) {
+      final fileIndex = sources.sources[sourceIndex].files
+          .indexWhere((file) => file.eTag == widget.file.eTag.value);
+
+      media = fileIndex != -1
+          ? sources.sources[sourceIndex].files[fileIndex]
+          : null;
+    }
 
     getOrCreateMedia();
     retrieveThumbnail();
@@ -47,14 +47,24 @@ class _ImageCardState extends State<ImageCard> {
       return;
     }
 
-    final newMedia = await media!.readExifFromFile();
-
-    await Sources.saveMediaInDatabase(newMedia);
+    try {
+      final newMedia = await media!.readExifFromFile();
+      await Sources.saveMediaInDatabase(newMedia);
+    } catch (e) {
+      // Handle error silently for now
+    }
   }
 
   Future<void> retrieveThumbnail() async {
-    compressedImage =
-        await Thumbnail.getOrCreateThumbnail(widget.file.eTag.value, media);
+    if (media != null) {
+      thumbnailPath =
+          await Thumbnail.getOrCreateThumbnail(widget.file.eTag.value, media!);
+    } else {
+      // Fallback: check if thumbnail already exists
+      final existingThumbnail =
+          await Thumbnail.readThumbnail(widget.file.eTag.value);
+      thumbnailPath = existingThumbnail?.path;
+    }
 
     if (!mounted) {
       return;
@@ -65,9 +75,18 @@ class _ImageCardState extends State<ImageCard> {
 
   @override
   Widget build(BuildContext context) {
-    if (compressedImage == null) {
+    if (thumbnailPath == null || !File(thumbnailPath!).existsSync()) {
       return Container(
-        color: Colors.grey,
+        color: Colors.grey[300],
+        child: Center(
+          child: Icon(
+            widget.file.mimeType.value.contains('video')
+                ? Icons.videocam
+                : Icons.photo,
+            color: Colors.grey[600],
+            size: 32,
+          ),
+        ),
       );
     }
 
@@ -78,14 +97,14 @@ class _ImageCardState extends State<ImageCard> {
         onTap: () {
           context.push(
               Uri(path: '/$mediaType/${widget.file.eTag.value}').toString());
-        }, // Handle your callback
+        },
         child: PhotoView.customChild(
           heroAttributes: PhotoViewHeroAttributes(
               tag: widget.file.eTag.value, transitionOnUserGestures: true),
           child: Container(
               decoration: BoxDecoration(
             image: DecorationImage(
-              image: Image.memory(compressedImage!).image,
+              image: FileImage(File(thumbnailPath!)),
               fit: BoxFit.cover,
             ),
           )),

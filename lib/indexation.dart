@@ -1,57 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:piyp/sources.dart';
-import 'package:piyp/thumbnail.dart';
+import 'package:piyp/database/database.dart';
+import 'package:piyp/init_db.dart';
 
 class IndexationPage extends StatefulWidget {
   const IndexationPage({super.key});
 
   @override
-  _IndexationPageState createState() => _IndexationPageState();
+  State<IndexationPage> createState() => _IndexationPageState();
 }
 
 class _IndexationPageState extends State<IndexationPage> {
-  final Sources _sources = Sources();
-  bool _isIndexing = false;
-  int _totalFiles = 0;
-  int _processedFiles = 0;
+  bool isIndexing = false;
+  String statusText = '';
+  int totalFiles = 0;
+  int processedFiles = 0;
 
-  Future<void> _startIndexation() async {
+  Future<void> startIndexation() async {
     setState(() {
-      _isIndexing = true;
-      _totalFiles = 0;
-      _processedFiles = 0;
+      isIndexing = true;
+      statusText = 'Starting indexation...';
+      totalFiles = 0;
+      processedFiles = 0;
     });
 
     try {
-      await _sources.retrieveAllFiles();
-      final files = _sources.getAllFiles();
+      Sources sources = Sources();
+      await sources.connectAllSources();
+
       setState(() {
-        _totalFiles = files.length;
+        statusText = 'Connected to sources. Retrieving files...';
       });
 
-      for (var i = 0; i < files.length; i += 50) {
-        final batch = files.skip(i).take(50);
-        await Future.wait(batch.map((file) async {
-          file.fileData = await file.server.read(file.path!);
-          Thumbnail.getOrCreateThumbnail(file.eTag!, file);
-          final newMedia = await file.readExifFromFile();
+      await sources.retrieveAllFiles();
+      final List<MediaCompanion> files =
+          sources.getAllFiles().map((file) => file.toCompanion()).toList();
 
-          await Sources.saveMediaInDatabase(newMedia);
+      setState(() {
+        totalFiles = files.length;
+        statusText = 'Found $totalFiles files. Processing...';
+      });
 
-          setState(() {
-            _processedFiles++;
-          });
-        }));
-      }
-    } catch (e) {
-      // Handle errors
-      print('Error during indexation: $e');
-    } finally {
-      if (mounted) {
+      for (var i = 0; i < files.length; i++) {
+        final file = files[i];
+        await database.insertMediaOnConflictUpdateEtag(
+          file.serverId.value,
+          file.eTag.value,
+          file.mimeType.value,
+          file.pathFile.value,
+          file.creationDate.value,
+          file.latitude.value,
+          file.longitude.value,
+        );
+
         setState(() {
-          _isIndexing = false;
+          processedFiles = i + 1;
+          statusText = 'Processing file $processedFiles/$totalFiles';
         });
       }
+
+      setState(() {
+        statusText = 'Indexation completed successfully!';
+        isIndexing = false;
+      });
+    } catch (e) {
+      setState(() {
+        statusText = 'Error during indexation: $e';
+        isIndexing = false;
+      });
     }
   }
 
@@ -65,17 +81,17 @@ class _IndexationPageState extends State<IndexationPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (_isIndexing)
+            if (isIndexing)
               Column(
                 children: [
                   const CircularProgressIndicator(),
                   const SizedBox(height: 20),
-                  Text('Indexing: $_processedFiles / $_totalFiles'),
+                  Text(statusText),
                 ],
               )
             else
               ElevatedButton(
-                onPressed: _startIndexation,
+                onPressed: startIndexation,
                 child: const Text('Start Indexation'),
               ),
           ],

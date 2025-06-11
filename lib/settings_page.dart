@@ -10,7 +10,7 @@ class NewSettingsPage extends StatefulWidget {
   const NewSettingsPage({super.key});
 
   @override
-  _NewSettingsPageState createState() => _NewSettingsPageState();
+  State<NewSettingsPage> createState() => _NewSettingsPageState();
 }
 
 class _NewSettingsPageState extends State<NewSettingsPage> {

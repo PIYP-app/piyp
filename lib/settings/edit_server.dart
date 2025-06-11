@@ -10,7 +10,7 @@ class EditServerPage extends StatefulWidget {
   const EditServerPage({super.key, required this.serverId});
 
   @override
-  _EditServerPageState createState() => _EditServerPageState();
+  State<EditServerPage> createState() => _EditServerPageState();
 }
 
 class _EditServerPageState extends State<EditServerPage> {

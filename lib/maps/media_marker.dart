@@ -48,10 +48,35 @@ class MediaMarker extends StatelessWidget {
       future: _getMediaWithThumbnail(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
+          return Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
         }
+
         if (snapshot.hasError || !snapshot.hasData) {
-          return const Icon(Icons.error);
+          return Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.red[300],
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: const Icon(Icons.photo, color: Colors.white, size: 24),
+          );
         }
 
         return Container(
