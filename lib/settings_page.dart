@@ -86,6 +86,8 @@ class _NewSettingsPageState extends State<NewSettingsPage>
         mode: drift.InsertMode.insertOrReplace,
       );
 
+      final serverName = _nameController.text;
+
       _loadServers();
       _clearForm();
       _toggleAddServerForm();
@@ -97,7 +99,7 @@ class _NewSettingsPageState extends State<NewSettingsPage>
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 12),
-                Text('Server "${_nameController.text}" added successfully'),
+                Text('Server "$serverName" added successfully'),
               ],
             ),
             backgroundColor: Colors.green,
